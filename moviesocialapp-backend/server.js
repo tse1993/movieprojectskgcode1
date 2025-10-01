@@ -1,6 +1,7 @@
 const express = require('express');
 require('dotenv').config(); // IMPORTANT: Load .env file
 const { connectDB, getDB } = require('./src/config/db');
+const apiRoutes = require('./src/routes/api');
 
 const app = express();
 
@@ -8,17 +9,20 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
+// API Routes
+app.use('/api', apiRoutes);
+
+// Root route
 app.get('/', (req, res) => {
-  res.json({ 
+  res.json({
     message: 'Movie Platform API',
     status: 'running',
     database: 'Connected',
     endpoints: {
       health: 'GET /api/health',
       auth: {
-        register: 'POST /auth/register',
-        login: 'POST /auth/login'
+        register: 'POST /api/auth/register',
+        login: 'POST /api/auth/login'
       }
     }
   });
