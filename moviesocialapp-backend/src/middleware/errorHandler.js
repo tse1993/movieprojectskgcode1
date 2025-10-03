@@ -1,44 +1,24 @@
 const errorHandler = (err, req, res, next) => {
-  console.error('Error:', {
-    message: err.message,
-    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
-    url: req.url,
-    method: req.method
-  });
+  console.error('Error:', err);
 
-  let status = err.status || 500;
-  let message = err.message || 'Internal server error';
-
-  if (err.name === 'ValidationError') {
-    status = 400;
-    message = 'Validation error: ' + err.message;
+  // JWT errors
+  if (err.name === 'JsonWebTokenError') {
+    return res.status(401).json({ message: 'Invalid token' });
   }
 
-  if (err.name === 'CastError') {
-    status = 400;
-    message = 'Invalid ID format';
+  if (err.name === 'TokenExpiredError') {
+    return res.status(401).json({ message: 'Token expired' });
   }
 
-  if (err.response) {
-    status = err.response.status || 500;
-    message = err.response.data?.status_message || 'External API error';
+  // MongoDB errors
+  if (err.name === 'MongoError' && err.code === 11000) {
+    return res.status(400).json({ message: 'Duplicate field value' });
   }
 
-  res.status(status).json({
-    success: false,
-    message,
-    ...(process.env.NODE_ENV === 'development' && {
-      error: err.message,
-      stack: err.stack
-    })
+  // Default error
+  res.status(err.status || 500).json({
+    message: err.message || 'Internal server error'
   });
 };
 
-const notFoundHandler = (req, res, next) => {
-  res.status(404).json({
-    success: false,
-    message: `Route ${req.originalUrl} not found`
-  });
-};
-
-module.exports = { errorHandler, notFoundHandler };
+module.exports = errorHandler;

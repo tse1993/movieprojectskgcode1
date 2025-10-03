@@ -131,7 +131,7 @@ async function testAuth() {
 // Check if server is running first
 async function checkServer() {
   try {
-    await axios.get('http://localhost:5000/api/health');
+    await axios.get('http://localhost:5000/health');
     console.log('✅ Server is running\n');
     return true;
   } catch (error) {

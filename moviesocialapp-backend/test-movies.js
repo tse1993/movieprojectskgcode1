@@ -21,7 +21,7 @@ async function testMovieController() {
       console.log('✅ Response has results:', Array.isArray(searchResponse.data.results));
       console.log('✅ Results count:', searchResponse.data.results.length);
 
-      // Check movie structure
+      // Check movie structure (backend.md format - no wrapper)
       if (searchResponse.data.results.length > 0) {
         const movie = searchResponse.data.results[0];
         console.log('✅ Movie has id:', !!movie.id);
@@ -107,7 +107,7 @@ async function testMovieController() {
     }
     console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
-    // Test 6: Get Movie Details (Authenticated User)
+    // Test 6: Get Movie Details (Authenticated User - backend.md schema)
     console.log('Test 6: Get Movie Details (Authenticated User)');
 
     // First register/login a test user
@@ -132,13 +132,14 @@ async function testMovieController() {
       console.log('✅ Status:', authDetailsResponse.status);
       console.log('✅ Movie ID:', movie.id);
       console.log('✅ Movie title:', movie.title);
-      console.log('✅ Has user data fields:',
+      console.log('✅ Has user data fields (backend.md schema):',
         'userRating' in movie &&
         'isFavorite' in movie &&
         'isInWatchlist' in movie);
-      console.log('✅ userRating:', movie.userRating);
-      console.log('✅ isFavorite:', movie.isFavorite);
-      console.log('✅ isInWatchlist:', movie.isInWatchlist);
+      console.log('✅ userRating (should be null):', movie.userRating);
+      console.log('✅ isFavorite (should be false):', movie.isFavorite);
+      console.log('✅ isInWatchlist (should be false):', movie.isInWatchlist);
+      console.log('✅ Has comments array:', Array.isArray(movie.comments));
       passedTests++;
     }
     console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
@@ -227,7 +228,7 @@ async function testMovieController() {
 // Check if server is running first
 async function checkServer() {
   try {
-    await axios.get('http://localhost:5000/api/health');
+    await axios.get('http://localhost:5000/health');
     console.log('✅ Server is running\n');
     return true;
   } catch (error) {

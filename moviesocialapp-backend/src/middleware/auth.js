@@ -2,29 +2,18 @@ const jwt = require('jsonwebtoken');
 const { getDB } = require('../config/db');
 const { ObjectId } = require('mongodb');
 
-const authenticate = async (req, res, next) => {
+const authenticateToken = async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        message: 'Authentication required'
-      });
+    if (!token) {
+      return res.status(401).json({ message: 'Access token required' });
     }
 
-    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    let decoded;
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (error) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid token'
-      });
-    }
-
+    // Verify user still exists
     const db = getDB();
     const user = await db.collection('users').findOne(
       { _id: new ObjectId(decoded.userId) },
@@ -32,62 +21,41 @@ const authenticate = async (req, res, next) => {
     );
 
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'User not found'
-      });
+      return res.status(401).json({ message: 'Invalid token' });
     }
 
-    req.user = {
-      userId: user._id.toString(),
-      username: user.username,
-      email: user.email
-    };
-
+    req.user = { userId: user._id, email: user.email, name: user.name };
     next();
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: 'Authentication failed'
-    });
+    console.error('Auth middleware error:', error);
+    return res.status(403).json({ message: 'Invalid token' });
   }
 };
 
+// Optional auth - doesn't fail if no token
 const optionalAuth = async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return next();
-    }
+    if (token) {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const db = getDB();
+      const user = await db.collection('users').findOne(
+        { _id: new ObjectId(decoded.userId) },
+        { projection: { password: 0 } }
+      );
 
-    const token = authHeader.substring(7);
-    let decoded;
-    
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (error) {
-      return next();
-    }
-
-    const db = getDB();
-    const user = await db.collection('users').findOne(
-      { _id: new ObjectId(decoded.userId) },
-      { projection: { password: 0 } }
-    );
-
-    if (user) {
-      req.user = {
-        userId: user._id.toString(),
-        username: user.username,
-        email: user.email
-      };
+      if (user) {
+        req.user = { userId: user._id, email: user.email, name: user.name };
+      }
     }
 
     next();
   } catch (error) {
+    // Ignore errors in optional auth
     next();
   }
 };
 
-module.exports = { authenticate, optionalAuth };
+module.exports = { authenticateToken, optionalAuth };
