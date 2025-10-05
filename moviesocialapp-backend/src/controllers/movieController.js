@@ -58,7 +58,16 @@ class MovieController {
       const db = getDB();
 
       // Get movie details from TMDB
-      const movie = await tmdbApi.getMovieDetails(id);
+      let movie;
+      try {
+        movie = await tmdbApi.getMovieDetails(id);
+      } catch (tmdbError) {
+        // If TMDB returns 404, pass it through
+        if (tmdbError.response?.status === 404) {
+          return res.status(404).json({ message: 'Movie not found' });
+        }
+        throw tmdbError;
+      }
 
       // Add user-specific data if authenticated
       if (req.user) {

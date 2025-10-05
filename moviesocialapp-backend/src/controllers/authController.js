@@ -67,13 +67,13 @@ class AuthController {
       // 🔍 Find user
       const user = await db.collection('users').findOne({ email });
       if (!user) {
-        return res.status(400).json({ message: 'Invalid credentials' });
+        return res.status(401).json({ message: 'Invalid credentials' });
       }
 
       // 🔐 Check password
       const isValidPassword = await bcrypt.compare(password, user.password);
       if (!isValidPassword) {
-        return res.status(400).json({ message: 'Invalid credentials' });
+        return res.status(401).json({ message: 'Invalid credentials' });
       }
 
       // 🎫 Generate JWT token

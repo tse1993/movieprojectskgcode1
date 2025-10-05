@@ -1,527 +1,615 @@
 require('dotenv').config();
 const axios = require('axios');
-const { connectDB, getDB } = require('./src/config/db');
-const { ObjectId } = require('mongodb');
-const jwt = require('jsonwebtoken');
 
-// Configuration
-const BASE_URL = process.env.BASE_URL || 'http://localhost:5000/api';
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const BASE_URL = 'http://localhost:5000/api';
+let authToken = null;
+let userId = null;
 
-// Test movie data
-const testMovies = [
-  { tmdbId: 550, title: 'Fight Club', posterPath: '/path1.jpg', releaseDate: '1999-10-15' },
-  { tmdbId: 155, title: 'The Dark Knight', posterPath: '/path2.jpg', releaseDate: '2008-07-18' },
-  { tmdbId: 13, title: 'Forrest Gump', posterPath: '/path3.jpg', releaseDate: '1994-07-06' }
-];
+// Test configuration
+const testMovie1 = { tmdbId: 550, title: 'Fight Club' }; // Fight Club
+const testMovie2 = { tmdbId: 680, title: 'Pulp Fiction' }; // Pulp Fiction
+const testMovie3 = { tmdbId: 13, title: 'Forrest Gump' }; // Forrest Gump
 
-async function testUserController() {
-  let db;
-  let testUserId;
-  let testToken;
+const testUser = {
+  email: `test-user-${Date.now()}@example.com`,
+  name: 'User Test',
+  password: 'password123'
+};
 
+// Helper function to print test results
+function printResult(testName, passed, details = '') {
+  const status = passed ? '✅' : '❌';
+  console.log(`${status} ${testName}`);
+  if (details) console.log(`   ${details}`);
+}
+
+// Test 1: Register test user
+async function testRegisterUser() {
   try {
-    console.log('🔄 Testing User Controller (Ratings, Favorites, Watchlist)...\n');
+    const response = await axios.post(`${BASE_URL}/auth/register`, testUser);
+    authToken = response.data.token;
+    userId = response.data.user.id;
 
-    // Setup: Connect to database and create test user
-    console.log('Setup: Preparing test environment');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    await connectDB();
-    db = getDB();
-
-    // Create a test user
-    testUserId = new ObjectId();
-    await db.collection('users').insertOne({
-      _id: testUserId,
-      name: 'User Test User',
-      email: 'usertest@example.com',
-      password: 'hashed_password',
-      createdAt: new Date()
-    });
-
-    // Generate auth token
-    testToken = jwt.sign(
-      { userId: testUserId.toString() },
-      JWT_SECRET,
-      { expiresIn: '1h' }
+    printResult('User registration',
+      response.status === 201 && authToken,
+      `Token received, User ID: ${userId}`
     );
-
-    console.log('✅ Test user created');
-    console.log('✅ Auth token generated\n');
-
-    // ==========================================
-    // RATINGS TESTS
-    // ==========================================
-    console.log('📊 RATINGS TESTS');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-
-    // Test 1: Get empty ratings list
-    console.log('Test 1: Get Empty Ratings List');
-    try {
-      const res = await axios.get(BASE_URL + '/user/ratings', {
-        headers: { Authorization: `Bearer ${testToken}` }
-      });
-      console.log(`✅ GET /user/ratings`);
-      console.log(`   Status: ${res.status}, Ratings: ${res.data.length}`);
-      if (res.data.length !== 0) {
-        console.log('   ⚠️  Expected empty array');
-      }
-    } catch (err) {
-      console.log(`❌ GET /user/ratings: ${err.response?.status || err.message}`);
-    }
-    console.log('');
-
-    // Test 2: Add first rating
-    console.log('Test 2: Add Rating for Fight Club');
-    try {
-      const res = await axios.post(
-        BASE_URL + '/user/ratings',
-        {
-          tmdbId: testMovies[0].tmdbId,
-          rating: 9.5,
-          review: 'Amazing movie! Mind-blowing plot twist.'
-        },
-        { headers: { Authorization: `Bearer ${testToken}` } }
-      );
-      console.log(`✅ POST /user/ratings`);
-      console.log(`   Status: ${res.status}`);
-      console.log(`   Movie: ${testMovies[0].title}`);
-      console.log(`   Rating: ${res.data.rating.rating}/10`);
-      console.log(`   Review: "${res.data.rating.review}"`);
-    } catch (err) {
-      console.log(`❌ POST /user/ratings: ${err.response?.status || err.message}`);
-      if (err.response?.data) console.log(`   ${err.response.data.message}`);
-    }
-    console.log('');
-
-    // Test 3: Add more ratings
-    console.log('Test 3: Add More Ratings');
-    try {
-      await axios.post(
-        BASE_URL + '/user/ratings',
-        { tmdbId: testMovies[1].tmdbId, rating: 10, review: 'Perfect superhero movie' },
-        { headers: { Authorization: `Bearer ${testToken}` } }
-      );
-      console.log(`✅ Added rating for ${testMovies[1].title}: 10/10`);
-
-      await axios.post(
-        BASE_URL + '/user/ratings',
-        { tmdbId: testMovies[2].tmdbId, rating: 8.5 },
-        { headers: { Authorization: `Bearer ${testToken}` } }
-      );
-      console.log(`✅ Added rating for ${testMovies[2].title}: 8.5/10 (no review)`);
-    } catch (err) {
-      console.log(`❌ Error adding ratings: ${err.response?.status || err.message}`);
-    }
-    console.log('');
-
-    // Test 4: Update existing rating
-    console.log('Test 4: Update Existing Rating');
-    try {
-      const res = await axios.post(
-        BASE_URL + '/user/ratings',
-        {
-          tmdbId: testMovies[0].tmdbId,
-          rating: 10,
-          review: 'Changed my mind - this is a 10/10!'
-        },
-        { headers: { Authorization: `Bearer ${testToken}` } }
-      );
-      console.log(`✅ POST /user/ratings (update)`);
-      console.log(`   Updated ${testMovies[0].title}`);
-      console.log(`   New rating: ${res.data.rating.rating}/10`);
-      console.log(`   New review: "${res.data.rating.review}"`);
-    } catch (err) {
-      console.log(`❌ Update rating failed: ${err.response?.status || err.message}`);
-    }
-    console.log('');
-
-    // Test 5: Get all ratings
-    console.log('Test 5: Get All User Ratings');
-    try {
-      const res = await axios.get(BASE_URL + '/user/ratings', {
-        headers: { Authorization: `Bearer ${testToken}` }
-      });
-      console.log(`✅ GET /user/ratings`);
-      console.log(`   Total ratings: ${res.data.length}`);
-      res.data.forEach((r, i) => {
-        console.log(`   ${i + 1}. Rating: ${r.rating}/10, Review: ${r.review ? '"' + r.review + '"' : 'None'}`);
-      });
-    } catch (err) {
-      console.log(`❌ GET /user/ratings: ${err.response?.status || err.message}`);
-    }
-    console.log('');
-
-    // Test 6: Get specific rating
-    console.log('Test 6: Get Rating for Specific Movie');
-    try {
-      const res = await axios.get(BASE_URL + `/user/ratings/${testMovies[1].tmdbId}`, {
-        headers: { Authorization: `Bearer ${testToken}` }
-      });
-      console.log(`✅ GET /user/ratings/${testMovies[1].tmdbId}`);
-      console.log(`   Movie ID: ${res.data.tmdbId}`);
-      console.log(`   Rating: ${res.data.rating}/10`);
-    } catch (err) {
-      console.log(`❌ GET specific rating: ${err.response?.status || err.message}`);
-    }
-    console.log('');
-
-    // Test 7: Invalid rating value
-    console.log('Test 7: Test Invalid Rating Values');
-    try {
-      await axios.post(
-        BASE_URL + '/user/ratings',
-        { tmdbId: 999, rating: 15 }, // Invalid: > 10
-        { headers: { Authorization: `Bearer ${testToken}` } }
-      );
-      console.log('❌ Should reject rating > 10');
-    } catch (err) {
-      if (err.response?.status === 400) {
-        console.log('✅ Correctly rejects rating > 10 (400)');
-      }
-    }
-
-    try {
-      await axios.post(
-        BASE_URL + '/user/ratings',
-        { tmdbId: 999, rating: 0 }, // Invalid: < 1
-        { headers: { Authorization: `Bearer ${testToken}` } }
-      );
-      console.log('❌ Should reject rating < 1');
-    } catch (err) {
-      if (err.response?.status === 400) {
-        console.log('✅ Correctly rejects rating < 1 (400)');
-      }
-    }
-    console.log('');
-
-    // ==========================================
-    // FAVORITES TESTS
-    // ==========================================
-    console.log('⭐ FAVORITES TESTS');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-
-    // Test 8: Get empty favorites
-    console.log('Test 8: Get Empty Favorites List');
-    try {
-      const res = await axios.get(BASE_URL + '/user/favorites', {
-        headers: { Authorization: `Bearer ${testToken}` }
-      });
-      console.log(`✅ GET /user/favorites`);
-      console.log(`   Status: ${res.status}, Favorites: ${res.data.length}`);
-    } catch (err) {
-      console.log(`❌ GET /user/favorites: ${err.response?.status || err.message}`);
-    }
-    console.log('');
-
-    // Test 9: Add to favorites
-    console.log('Test 9: Add Movies to Favorites');
-    for (let i = 0; i < 2; i++) {
-      try {
-        const res = await axios.post(
-          BASE_URL + '/user/favorites',
-          testMovies[i],
-          { headers: { Authorization: `Bearer ${testToken}` } }
-        );
-        console.log(`✅ Added "${testMovies[i].title}" to favorites`);
-      } catch (err) {
-        console.log(`❌ Add to favorites failed: ${err.response?.status || err.message}`);
-      }
-    }
-    console.log('');
-
-    // Test 10: Try to add duplicate
-    console.log('Test 10: Try Adding Duplicate to Favorites');
-    try {
-      await axios.post(
-        BASE_URL + '/user/favorites',
-        testMovies[0],
-        { headers: { Authorization: `Bearer ${testToken}` } }
-      );
-      console.log('❌ Should reject duplicate favorite');
-    } catch (err) {
-      if (err.response?.status === 400) {
-        console.log('✅ Correctly rejects duplicate (400)');
-        console.log(`   Message: "${err.response.data.message}"`);
-      }
-    }
-    console.log('');
-
-    // Test 11: Get all favorites
-    console.log('Test 11: Get All Favorites');
-    try {
-      const res = await axios.get(BASE_URL + '/user/favorites', {
-        headers: { Authorization: `Bearer ${testToken}` }
-      });
-      console.log(`✅ GET /user/favorites`);
-      console.log(`   Total favorites: ${res.data.length}`);
-      res.data.forEach((f, i) => {
-        console.log(`   ${i + 1}. ${f.title} (${f.releaseDate})`);
-      });
-    } catch (err) {
-      console.log(`❌ GET /user/favorites: ${err.response?.status || err.message}`);
-    }
-    console.log('');
-
-    // Test 12: Check if movie is favorite
-    console.log('Test 12: Check if Movie is Favorite');
-    try {
-      const res1 = await axios.get(BASE_URL + `/user/favorites/${testMovies[0].tmdbId}`, {
-        headers: { Authorization: `Bearer ${testToken}` }
-      });
-      console.log(`✅ ${testMovies[0].title}: isFavorite = ${res1.data.isFavorite}`);
-
-      const res2 = await axios.get(BASE_URL + `/user/favorites/${testMovies[2].tmdbId}`, {
-        headers: { Authorization: `Bearer ${testToken}` }
-      });
-      console.log(`✅ ${testMovies[2].title}: isFavorite = ${res2.data.isFavorite}`);
-    } catch (err) {
-      console.log(`❌ Check favorite: ${err.response?.status || err.message}`);
-    }
-    console.log('');
-
-    // ==========================================
-    // WATCHLIST TESTS
-    // ==========================================
-    console.log('📺 WATCHLIST TESTS');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-
-    // Test 13: Get empty watchlist
-    console.log('Test 13: Get Empty Watchlist');
-    try {
-      const res = await axios.get(BASE_URL + '/user/watchlist', {
-        headers: { Authorization: `Bearer ${testToken}` }
-      });
-      console.log(`✅ GET /user/watchlist`);
-      console.log(`   Status: ${res.status}, Items: ${res.data.length}`);
-    } catch (err) {
-      console.log(`❌ GET /user/watchlist: ${err.response?.status || err.message}`);
-    }
-    console.log('');
-
-    // Test 14: Add to watchlist
-    console.log('Test 14: Add Movies to Watchlist');
-    for (const movie of testMovies) {
-      try {
-        await axios.post(
-          BASE_URL + '/user/watchlist',
-          movie,
-          { headers: { Authorization: `Bearer ${testToken}` } }
-        );
-        console.log(`✅ Added "${movie.title}" to watchlist`);
-      } catch (err) {
-        console.log(`❌ Add to watchlist failed: ${err.response?.status || err.message}`);
-      }
-    }
-    console.log('');
-
-    // Test 15: Get all watchlist
-    console.log('Test 15: Get All Watchlist Items');
-    try {
-      const res = await axios.get(BASE_URL + '/user/watchlist', {
-        headers: { Authorization: `Bearer ${testToken}` }
-      });
-      console.log(`✅ GET /user/watchlist`);
-      console.log(`   Total items: ${res.data.length}`);
-      res.data.forEach((w, i) => {
-        console.log(`   ${i + 1}. ${w.title}`);
-      });
-    } catch (err) {
-      console.log(`❌ GET /user/watchlist: ${err.response?.status || err.message}`);
-    }
-    console.log('');
-
-    // Test 16: Check if in watchlist
-    console.log('Test 16: Check if Movie is in Watchlist');
-    try {
-      const res = await axios.get(BASE_URL + `/user/watchlist/${testMovies[1].tmdbId}`, {
-        headers: { Authorization: `Bearer ${testToken}` }
-      });
-      console.log(`✅ ${testMovies[1].title}: isInWatchlist = ${res.data.isInWatchlist}`);
-    } catch (err) {
-      console.log(`❌ Check watchlist: ${err.response?.status || err.message}`);
-    }
-    console.log('');
-
-    // Test 17: Remove from watchlist
-    console.log('Test 17: Remove from Watchlist');
-    try {
-      const res = await axios.delete(
-        BASE_URL + `/user/watchlist/${testMovies[0].tmdbId}`,
-        { headers: { Authorization: `Bearer ${testToken}` } }
-      );
-      console.log(`✅ Removed "${testMovies[0].title}" from watchlist`);
-      console.log(`   Message: ${res.data.message}`);
-    } catch (err) {
-      console.log(`❌ Remove from watchlist: ${err.response?.status || err.message}`);
-    }
-    console.log('');
-
-    // ==========================================
-    // USER STATISTICS
-    // ==========================================
-    console.log('📈 USER STATISTICS');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-
-    // Test 18: Get user stats
-    console.log('Test 18: Get User Statistics');
-    try {
-      const res = await axios.get(BASE_URL + '/user/stats', {
-        headers: { Authorization: `Bearer ${testToken}` }
-      });
-      console.log(`✅ GET /user/stats`);
-      console.log(`   📊 Total Ratings: ${res.data.ratingsCount}`);
-      console.log(`   ⭐ Total Favorites: ${res.data.favoritesCount}`);
-      console.log(`   📺 Total Watchlist: ${res.data.watchlistCount}`);
-      console.log(`   📈 Average Rating: ${res.data.averageRating.toFixed(2)}/10`);
-    } catch (err) {
-      console.log(`❌ GET /user/stats: ${err.response?.status || err.message}`);
-    }
-    console.log('');
-
-    // ==========================================
-    // DELETE OPERATIONS
-    // ==========================================
-    console.log('🗑️  DELETE OPERATIONS');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-
-    // Test 19: Delete rating
-    console.log('Test 19: Delete a Rating');
-    try {
-      const res = await axios.delete(
-        BASE_URL + `/user/ratings/${testMovies[2].tmdbId}`,
-        { headers: { Authorization: `Bearer ${testToken}` } }
-      );
-      console.log(`✅ Deleted rating for ${testMovies[2].title}`);
-      console.log(`   Message: ${res.data.message}`);
-    } catch (err) {
-      console.log(`❌ Delete rating: ${err.response?.status || err.message}`);
-    }
-    console.log('');
-
-    // Test 20: Delete favorite
-    console.log('Test 20: Delete from Favorites');
-    try {
-      const res = await axios.delete(
-        BASE_URL + `/user/favorites/${testMovies[1].tmdbId}`,
-        { headers: { Authorization: `Bearer ${testToken}` } }
-      );
-      console.log(`✅ Removed ${testMovies[1].title} from favorites`);
-    } catch (err) {
-      console.log(`❌ Delete favorite: ${err.response?.status || err.message}`);
-    }
-    console.log('');
-
-    // Test 21: Verify deletions
-    console.log('Test 21: Verify Deletions in Database');
-    try {
-      const rating = await db.collection('ratings').findOne({
-        userId: new ObjectId(testUserId),
-        tmdbId: testMovies[2].tmdbId
-      });
-      if (!rating) {
-        console.log('✅ Rating successfully deleted from database');
-      } else {
-        console.log('❌ Rating still exists in database');
-      }
-
-      const favorite = await db.collection('favorites').findOne({
-        userId: new ObjectId(testUserId),
-        tmdbId: testMovies[1].tmdbId
-      });
-      if (!favorite) {
-        console.log('✅ Favorite successfully deleted from database');
-      } else {
-        console.log('❌ Favorite still exists in database');
-      }
-    } catch (err) {
-      console.log(`❌ Database verification failed: ${err.message}`);
-    }
-    console.log('');
-
-    // ==========================================
-    // AUTHENTICATION TESTS
-    // ==========================================
-    console.log('🔒 AUTHENTICATION TESTS');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-
-    // Test 22: Access without token
-    console.log('Test 22: Access Without Authentication');
-    const protectedEndpoints = [
-      '/user/ratings',
-      '/user/favorites',
-      '/user/watchlist',
-      '/user/stats'
-    ];
-
-    for (const endpoint of protectedEndpoints) {
-      try {
-        await axios.get(BASE_URL + endpoint);
-        console.log(`❌ ${endpoint}: Should require authentication`);
-      } catch (err) {
-        if (err.response?.status === 401) {
-          console.log(`✅ ${endpoint}: Correctly requires auth (401)`);
-        } else {
-          console.log(`⚠️  ${endpoint}: Unexpected status ${err.response?.status}`);
-        }
-      }
-    }
-    console.log('');
-
-    // ==========================================
-    // FINAL STATS
-    // ==========================================
-    console.log('📊 FINAL STATISTICS');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-
-    try {
-      const res = await axios.get(BASE_URL + '/user/stats', {
-        headers: { Authorization: `Bearer ${testToken}` }
-      });
-      console.log('Final user statistics:');
-      console.log(`  Ratings: ${res.data.ratingsCount}`);
-      console.log(`  Favorites: ${res.data.favoritesCount}`);
-      console.log(`  Watchlist: ${res.data.watchlistCount}`);
-      console.log(`  Avg Rating: ${res.data.averageRating.toFixed(2)}/10`);
-    } catch (err) {
-      console.log('Could not fetch final stats');
-    }
-    console.log('');
-
-    // ==========================================
-    // CLEANUP
-    // ==========================================
-    console.log('Cleanup: Removing test data');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-
-    await db.collection('users').deleteOne({ _id: testUserId });
-    await db.collection('ratings').deleteMany({ userId: testUserId });
-    await db.collection('favorites').deleteMany({ userId: testUserId });
-    await db.collection('watchlist').deleteMany({ userId: testUserId });
-    console.log('✅ All test data removed');
-    console.log('');
-
-    console.log('✅ All User Controller tests completed!\n');
-    process.exit(0);
-
+    return true;
   } catch (error) {
-    console.error('\n❌ User Controller test failed:', error.message);
-    
-    // Cleanup on error
-    if (db && testUserId) {
-      try {
-        await db.collection('users').deleteOne({ _id: testUserId });
-        await db.collection('ratings').deleteMany({ userId: testUserId });
-        await db.collection('favorites').deleteMany({ userId: testUserId });
-        await db.collection('watchlist').deleteMany({ userId: testUserId });
-        console.log('✅ Cleaned up test data');
-      } catch (cleanupErr) {
-        console.error('⚠️  Cleanup failed:', cleanupErr.message);
-      }
-    }
-    
-    process.exit(1);
+    printResult('User registration', false, error.response?.data?.message || error.message);
+    return false;
   }
 }
 
-testUserController();
+// Test 2: Get user profile
+async function testGetProfile() {
+  try {
+    const response = await axios.get(`${BASE_URL}/user/profile`, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+
+    const passed = response.status === 200 &&
+                   response.data.email === testUser.email &&
+                   response.data.name === testUser.name &&
+                   !response.data.password &&
+                   Array.isArray(response.data.favorites) &&
+                   Array.isArray(response.data.watchlist) &&
+                   Array.isArray(response.data.ratings);
+
+    printResult('Get user profile', passed,
+      `Email: ${response.data.email}, Name: ${response.data.name}, Password excluded: ${!response.data.password}`
+    );
+    return passed;
+  } catch (error) {
+    printResult('Get user profile', false, error.response?.data?.message || error.message);
+    return false;
+  }
+}
+
+// Test 3: Get profile without auth (should fail)
+async function testGetProfileNoAuth() {
+  try {
+    await axios.get(`${BASE_URL}/user/profile`);
+    printResult('Get profile without auth (should fail)', false, 'Should require authentication');
+    return false;
+  } catch (error) {
+    const passed = error.response?.status === 401;
+    printResult('Get profile without auth (should fail)', passed,
+      `Expected 401, got ${error.response?.status}`
+    );
+    return passed;
+  }
+}
+
+// Test 4: Rate a movie
+async function testRateMovie() {
+  try {
+    const response = await axios.post(`${BASE_URL}/user/rate`, {
+      tmdbId: testMovie1.tmdbId,
+      rating: 9
+    }, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+
+    const passed = response.status === 200 &&
+                   response.data.message === 'Rating saved successfully';
+
+    printResult('Rate movie', passed,
+      `Rated ${testMovie1.title} with 9/10`
+    );
+    return passed;
+  } catch (error) {
+    printResult('Rate movie', false, error.response?.data?.message || error.message);
+    return false;
+  }
+}
+
+// Test 5: Rate multiple movies
+async function testRateMultipleMovies() {
+  try {
+    await axios.post(`${BASE_URL}/user/rate`, {
+      tmdbId: testMovie2.tmdbId,
+      rating: 10
+    }, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+
+    await axios.post(`${BASE_URL}/user/rate`, {
+      tmdbId: testMovie3.tmdbId,
+      rating: 8
+    }, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+
+    printResult('Rate multiple movies', true,
+      `Rated ${testMovie2.title} (10/10) and ${testMovie3.title} (8/10)`
+    );
+    return true;
+  } catch (error) {
+    printResult('Rate multiple movies', false, error.response?.data?.message || error.message);
+    return false;
+  }
+}
+
+// Test 6: Update existing rating
+async function testUpdateRating() {
+  try {
+    const response = await axios.post(`${BASE_URL}/user/rate`, {
+      tmdbId: testMovie1.tmdbId,
+      rating: 10  // Changed from 9 to 10
+    }, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+
+    const passed = response.status === 200;
+    printResult('Update existing rating', passed,
+      `Updated ${testMovie1.title} rating from 9 to 10`
+    );
+    return passed;
+  } catch (error) {
+    printResult('Update existing rating', false, error.response?.data?.message || error.message);
+    return false;
+  }
+}
+
+// Test 7: Rate with invalid rating (should fail)
+async function testInvalidRating() {
+  try {
+    await axios.post(`${BASE_URL}/user/rate`, {
+      tmdbId: testMovie1.tmdbId,
+      rating: 11  // Invalid: out of range
+    }, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+    printResult('Invalid rating (should fail)', false, 'Should reject rating > 10');
+    return false;
+  } catch (error) {
+    const passed = error.response?.status === 400;
+    printResult('Invalid rating (should fail)', passed,
+      `Expected 400, got ${error.response?.status}: ${error.response?.data?.message}`
+    );
+    return passed;
+  }
+}
+
+// Test 8: Get user ratings
+async function testGetRatings() {
+  try {
+    const response = await axios.get(`${BASE_URL}/user/ratings`, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+
+    const passed = response.status === 200 &&
+                   Array.isArray(response.data) &&
+                   response.data.length === 3 &&
+                   response.data.every(r => r.tmdbId && r.rating && r.ratedAt);
+
+    printResult('Get user ratings', passed,
+      `Found ${response.data.length} ratings${response.data.length > 0 ? ': ' + response.data.map(r => `${r.movie?.title || r.tmdbId} (${r.rating}/10)`).join(', ') : ''}`
+    );
+    return passed;
+  } catch (error) {
+    printResult('Get user ratings', false, error.response?.data?.message || error.message);
+    return false;
+  }
+}
+
+// Test 9: Toggle favorite (add)
+async function testAddFavorite() {
+  try {
+    const response = await axios.post(`${BASE_URL}/user/favorite`, {
+      tmdbId: testMovie1.tmdbId
+    }, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+
+    const passed = response.status === 200 &&
+                   response.data.isFavorite === true;
+
+    printResult('Add to favorites', passed,
+      `Added ${testMovie1.title} to favorites`
+    );
+    return passed;
+  } catch (error) {
+    printResult('Add to favorites', false, error.response?.data?.message || error.message);
+    return false;
+  }
+}
+
+// Test 10: Toggle favorite (remove)
+async function testRemoveFavorite() {
+  try {
+    const response = await axios.post(`${BASE_URL}/user/favorite`, {
+      tmdbId: testMovie1.tmdbId
+    }, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+
+    const passed = response.status === 200 &&
+                   response.data.isFavorite === false;
+
+    printResult('Remove from favorites', passed,
+      `Removed ${testMovie1.title} from favorites`
+    );
+    return passed;
+  } catch (error) {
+    printResult('Remove from favorites', false, error.response?.data?.message || error.message);
+    return false;
+  }
+}
+
+// Test 11: Add multiple favorites
+async function testAddMultipleFavorites() {
+  try {
+    await axios.post(`${BASE_URL}/user/favorite`, {
+      tmdbId: testMovie1.tmdbId
+    }, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+
+    await axios.post(`${BASE_URL}/user/favorite`, {
+      tmdbId: testMovie2.tmdbId
+    }, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+
+    printResult('Add multiple favorites', true,
+      `Added ${testMovie1.title} and ${testMovie2.title} to favorites`
+    );
+    return true;
+  } catch (error) {
+    printResult('Add multiple favorites', false, error.response?.data?.message || error.message);
+    return false;
+  }
+}
+
+// Test 12: Get favorites
+async function testGetFavorites() {
+  try {
+    const response = await axios.get(`${BASE_URL}/user/favorites`, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+
+    const passed = response.status === 200 &&
+                   Array.isArray(response.data) &&
+                   response.data.length === 2 &&
+                   response.data.every(m => m.id && m.title);
+
+    printResult('Get favorites', passed,
+      `Found ${response.data.length} favorites${response.data.length > 0 ? ': ' + response.data.map(m => m.title).join(', ') : ''}`
+    );
+    return passed;
+  } catch (error) {
+    printResult('Get favorites', false, error.response?.data?.message || error.message);
+    return false;
+  }
+}
+
+// Test 13: Add to watchlist
+async function testAddToWatchlist() {
+  try {
+    const response = await axios.post(`${BASE_URL}/user/watchlist`, {
+      tmdbId: testMovie3.tmdbId
+    }, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+
+    const passed = response.status === 200 &&
+                   response.data.isInWatchlist === true;
+
+    printResult('Add to watchlist', passed,
+      `Added ${testMovie3.title} to watchlist`
+    );
+    return passed;
+  } catch (error) {
+    printResult('Add to watchlist', false, error.response?.data?.message || error.message);
+    return false;
+  }
+}
+
+// Test 14: Remove from watchlist
+async function testRemoveFromWatchlist() {
+  try {
+    const response = await axios.post(`${BASE_URL}/user/watchlist`, {
+      tmdbId: testMovie3.tmdbId
+    }, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+
+    const passed = response.status === 200 &&
+                   response.data.isInWatchlist === false;
+
+    printResult('Remove from watchlist', passed,
+      `Removed ${testMovie3.title} from watchlist`
+    );
+    return passed;
+  } catch (error) {
+    printResult('Remove from watchlist', false, error.response?.data?.message || error.message);
+    return false;
+  }
+}
+
+// Test 15: Add multiple to watchlist
+async function testAddMultipleWatchlist() {
+  try {
+    await axios.post(`${BASE_URL}/user/watchlist`, {
+      tmdbId: testMovie2.tmdbId
+    }, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+
+    await axios.post(`${BASE_URL}/user/watchlist`, {
+      tmdbId: testMovie3.tmdbId
+    }, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+
+    printResult('Add multiple to watchlist', true,
+      `Added ${testMovie2.title} and ${testMovie3.title} to watchlist`
+    );
+    return true;
+  } catch (error) {
+    printResult('Add multiple to watchlist', false, error.response?.data?.message || error.message);
+    return false;
+  }
+}
+
+// Test 16: Get watchlist
+async function testGetWatchlist() {
+  try {
+    const response = await axios.get(`${BASE_URL}/user/watchlist`, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+
+    const passed = response.status === 200 &&
+                   Array.isArray(response.data) &&
+                   response.data.length === 2 &&
+                   response.data.every(m => m.id && m.title);
+
+    printResult('Get watchlist', passed,
+      `Found ${response.data.length} items${response.data.length > 0 ? ': ' + response.data.map(m => m.title).join(', ') : ''}`
+    );
+    return passed;
+  } catch (error) {
+    printResult('Get watchlist', false, error.response?.data?.message || error.message);
+    return false;
+  }
+}
+
+// Test 17: Get user statistics
+async function testGetStatistics() {
+  try {
+    const response = await axios.get(`${BASE_URL}/user/statistics`, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+
+    const passed = response.status === 200 &&
+                   response.data.moviesRated === 3 &&
+                   response.data.favoriteCount === 2 &&
+                   response.data.watchlistCount === 2 &&
+                   response.data.averageRating > 0 &&
+                   response.data.memberSince;
+
+    printResult('Get user statistics', passed,
+      `Ratings: ${response.data.moviesRated}, Avg: ${response.data.averageRating.toFixed(1)}, Favorites: ${response.data.favoriteCount}, Watchlist: ${response.data.watchlistCount}`
+    );
+    return passed;
+  } catch (error) {
+    printResult('Get user statistics', false, error.response?.data?.message || error.message);
+    return false;
+  }
+}
+
+// Test 18: Clear all ratings
+async function testClearRatings() {
+  try {
+    const response = await axios.delete(`${BASE_URL}/user/ratings`, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+
+    const passed = response.status === 200;
+    printResult('Clear all ratings', passed, 'All ratings cleared');
+    return passed;
+  } catch (error) {
+    printResult('Clear all ratings', false, error.response?.data?.message || error.message);
+    return false;
+  }
+}
+
+// Test 19: Verify ratings cleared
+async function testVerifyRatingsCleared() {
+  try {
+    const response = await axios.get(`${BASE_URL}/user/ratings`, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+
+    const passed = response.status === 200 &&
+                   Array.isArray(response.data) &&
+                   response.data.length === 0;
+
+    printResult('Verify ratings cleared', passed,
+      `Ratings count: ${response.data.length}`
+    );
+    return passed;
+  } catch (error) {
+    printResult('Verify ratings cleared', false, error.response?.data?.message || error.message);
+    return false;
+  }
+}
+
+// Test 20: Clear all favorites
+async function testClearFavorites() {
+  try {
+    const response = await axios.delete(`${BASE_URL}/user/favorites`, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+
+    const passed = response.status === 200;
+    printResult('Clear all favorites', passed, 'All favorites cleared');
+    return passed;
+  } catch (error) {
+    printResult('Clear all favorites', false, error.response?.data?.message || error.message);
+    return false;
+  }
+}
+
+// Test 21: Verify favorites cleared
+async function testVerifyFavoritesCleared() {
+  try {
+    const response = await axios.get(`${BASE_URL}/user/favorites`, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+
+    const passed = response.status === 200 &&
+                   Array.isArray(response.data) &&
+                   response.data.length === 0;
+
+    printResult('Verify favorites cleared', passed,
+      `Favorites count: ${response.data.length}`
+    );
+    return passed;
+  } catch (error) {
+    printResult('Verify favorites cleared', false, error.response?.data?.message || error.message);
+    return false;
+  }
+}
+
+// Test 22: Clear all watchlist
+async function testClearWatchlist() {
+  try {
+    const response = await axios.delete(`${BASE_URL}/user/watchlist`, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+
+    const passed = response.status === 200;
+    printResult('Clear all watchlist', passed, 'All watchlist items cleared');
+    return passed;
+  } catch (error) {
+    printResult('Clear all watchlist', false, error.response?.data?.message || error.message);
+    return false;
+  }
+}
+
+// Test 23: Verify watchlist cleared
+async function testVerifyWatchlistCleared() {
+  try {
+    const response = await axios.get(`${BASE_URL}/user/watchlist`, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+
+    const passed = response.status === 200 &&
+                   Array.isArray(response.data) &&
+                   response.data.length === 0;
+
+    printResult('Verify watchlist cleared', passed,
+      `Watchlist count: ${response.data.length}`
+    );
+    return passed;
+  } catch (error) {
+    printResult('Verify watchlist cleared', false, error.response?.data?.message || error.message);
+    return false;
+  }
+}
+
+// Test 24: Final statistics check
+async function testFinalStatistics() {
+  try {
+    const response = await axios.get(`${BASE_URL}/user/statistics`, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+
+    const passed = response.status === 200 &&
+                   response.data.moviesRated === 0 &&
+                   response.data.favoriteCount === 0 &&
+                   response.data.watchlistCount === 0;
+
+    printResult('Final statistics check', passed,
+      `All cleared: Ratings: ${response.data.moviesRated}, Favorites: ${response.data.favoriteCount}, Watchlist: ${response.data.watchlistCount}`
+    );
+    return passed;
+  } catch (error) {
+    printResult('Final statistics check', false, error.response?.data?.message || error.message);
+    return false;
+  }
+}
+
+// Main test runner
+async function runAllTests() {
+  console.log('\n========================================');
+  console.log('🧪 USER CONTROLLER TEST SUITE');
+  console.log('========================================\n');
+  console.log('Testing Phase 5: User Features Implementation');
+  console.log('Controller: userController.js');
+  console.log('Routes: profile, statistics, ratings, favorites, watchlist\n');
+  console.log('========================================\n');
+
+  const tests = [
+    { name: 'Setup', fn: testRegisterUser },
+    { name: 'Profile - Get', fn: testGetProfile },
+    { name: 'Profile - Get (No Auth)', fn: testGetProfileNoAuth },
+    { name: 'Ratings - Rate Movie', fn: testRateMovie },
+    { name: 'Ratings - Rate Multiple', fn: testRateMultipleMovies },
+    { name: 'Ratings - Update Existing', fn: testUpdateRating },
+    { name: 'Ratings - Invalid Rating', fn: testInvalidRating },
+    { name: 'Ratings - Get All', fn: testGetRatings },
+    { name: 'Favorites - Add', fn: testAddFavorite },
+    { name: 'Favorites - Remove (Toggle)', fn: testRemoveFavorite },
+    { name: 'Favorites - Add Multiple', fn: testAddMultipleFavorites },
+    { name: 'Favorites - Get All', fn: testGetFavorites },
+    { name: 'Watchlist - Add', fn: testAddToWatchlist },
+    { name: 'Watchlist - Remove (Toggle)', fn: testRemoveFromWatchlist },
+    { name: 'Watchlist - Add Multiple', fn: testAddMultipleWatchlist },
+    { name: 'Watchlist - Get All', fn: testGetWatchlist },
+    { name: 'Statistics - Get', fn: testGetStatistics },
+    { name: 'Ratings - Clear All', fn: testClearRatings },
+    { name: 'Ratings - Verify Cleared', fn: testVerifyRatingsCleared },
+    { name: 'Favorites - Clear All', fn: testClearFavorites },
+    { name: 'Favorites - Verify Cleared', fn: testVerifyFavoritesCleared },
+    { name: 'Watchlist - Clear All', fn: testClearWatchlist },
+    { name: 'Watchlist - Verify Cleared', fn: testVerifyWatchlistCleared },
+    { name: 'Statistics - Final Check', fn: testFinalStatistics }
+  ];
+
+  let passed = 0;
+  let failed = 0;
+
+  for (const test of tests) {
+    const result = await test.fn();
+    if (result) {
+      passed++;
+    } else {
+      failed++;
+    }
+  }
+
+  console.log('\n========================================');
+  console.log('📊 TEST RESULTS SUMMARY');
+  console.log('========================================');
+  console.log(`Total Tests: ${tests.length}`);
+  console.log(`✅ Passed: ${passed}`);
+  console.log(`❌ Failed: ${failed}`);
+  console.log(`Success Rate: ${((passed / tests.length) * 100).toFixed(2)}%`);
+  console.log('========================================\n');
+
+  if (failed === 0) {
+    console.log('🎉 ALL TESTS PASSED! User Controller is working correctly.\n');
+    console.log('✅ Phase 5 Implementation: COMPLETE');
+    console.log('✅ Matches backend.md specification');
+    console.log('✅ Embedded arrays pattern working');
+    console.log('✅ Profile & Statistics working');
+    console.log('✅ Ratings CRUD working');
+    console.log('✅ Favorites toggle working');
+    console.log('✅ Watchlist toggle working');
+    console.log('✅ Clear all operations working\n');
+  } else {
+    console.log('⚠️  Some tests failed. Please review the implementation.\n');
+  }
+
+  process.exit(failed === 0 ? 0 : 1);
+}
+
+// Run tests
+runAllTests().catch(error => {
+  console.error('❌ Fatal error running tests:', error);
+  process.exit(1);
+});

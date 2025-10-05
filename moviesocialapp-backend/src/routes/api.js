@@ -21,6 +21,26 @@ router.get('/movies/top-rated', movieController.getTopRatedMovies);
 router.get('/movies/upcoming', movieController.getUpcomingMovies);
 router.get('/movies/:id', optionalAuth, movieController.getMovieDetails);
 
+// USER ROUTES (AUTHENTICATED)
+// Profile & Statistics
+router.get('/user/profile', authenticateToken, userController.getProfile);
+router.get('/user/statistics', authenticateToken, userController.getUserStatistics);
+
+// Ratings
+router.post('/user/rate', authenticateToken, userController.rateMovie);
+router.get('/user/ratings', authenticateToken, userController.getUserRatings);
+router.delete('/user/ratings', authenticateToken, userController.clearAllRatings);
+
+// Favorites
+router.post('/user/favorite', authenticateToken, userController.toggleFavorite);
+router.get('/user/favorites', authenticateToken, userController.getUserFavorites);
+router.delete('/user/favorites', authenticateToken, userController.clearAllFavorites);
+
+// Watchlist
+router.post('/user/watchlist', authenticateToken, userController.toggleWatchlist);
+router.get('/user/watchlist', authenticateToken, userController.getUserWatchlist);
+router.delete('/user/watchlist', authenticateToken, userController.clearAllWatchlist);
+
 // SOCIAL ROUTES - COMMENTS
 // Get comments for a movie (public)
 router.get('/comments/:tmdbId', socialController.getMovieComments);
@@ -37,24 +57,5 @@ router.delete('/comments/:id', authenticateToken, socialController.deleteComment
 // SOCIAL ROUTES - FEED
 // Get activity feed (public)
 router.get('/feed', socialController.getFeed);
-
-// User routes
-
-router.get('/user/ratings', authenticateToken, userController.getUserRatings);
-router.post('/user/ratings', authenticateToken, userController.addOrUpdateRating);
-router.get('/user/ratings/:tmdbId', authenticateToken, userController.getRatingForMovie);
-router.delete('/user/ratings/:tmdbId', authenticateToken, userController.deleteRating);
-
-router.get('/user/favorites', authenticateToken, userController.getFavorites);
-router.post('/user/favorites', authenticateToken, userController.addToFavorites);
-router.get('/user/favorites/:tmdbId', authenticateToken, userController.isFavorite);
-router.delete('/user/favorites/:tmdbId', authenticateToken, userController.removeFromFavorites);
-
-router.get('/user/watchlist', authenticateToken, userController.getWatchlist);
-router.post('/user/watchlist', authenticateToken, userController.addToWatchlist);
-router.get('/user/watchlist/:tmdbId', authenticateToken, userController.isInWatchlist);
-router.delete('/user/watchlist/:tmdbId', authenticateToken, userController.removeFromWatchlist);
-
-router.get('/user/stats', authenticateToken, userController.getUserStats);
 
 module.exports = router;
