@@ -1,8 +1,8 @@
 # MovieSocialApp API Documentation
 
 **Base URL:** `http://localhost:5000/api`
-**Status:** ✅ Auth and Movie endpoints live (27/27 tests passing)
-**Last Updated:** October 2025
+**Status:** ✅ ALL endpoints live and tested (61/61 tests passing - 100%)
+**Last Updated:** October 5, 2025
 
 ---
 
@@ -113,7 +113,7 @@ export const getMovieDetails = async (id) => {
 };
 
 // ============================================
-// USER (Coming Soon)
+// USER
 // ============================================
 
 export const getUserProfile = async () => {
@@ -121,8 +121,23 @@ export const getUserProfile = async () => {
   return response.data;
 };
 
+export const getUserStatistics = async () => {
+  const response = await api.get('/user/statistics');
+  return response.data;
+};
+
 export const rateMovie = async (tmdbId, rating) => {
   const response = await api.post('/user/rate', { tmdbId, rating });
+  return response.data;
+};
+
+export const getUserRatings = async () => {
+  const response = await api.get('/user/ratings');
+  return response.data;
+};
+
+export const clearAllRatings = async () => {
+  const response = await api.delete('/user/ratings');
   return response.data;
 };
 
@@ -136,6 +151,11 @@ export const getUserFavorites = async () => {
   return response.data;
 };
 
+export const clearAllFavorites = async () => {
+  const response = await api.delete('/user/favorites');
+  return response.data;
+};
+
 export const toggleWatchlist = async (tmdbId) => {
   const response = await api.post('/user/watchlist', { tmdbId });
   return response.data;
@@ -146,8 +166,13 @@ export const getUserWatchlist = async () => {
   return response.data;
 };
 
+export const clearAllWatchlist = async () => {
+  const response = await api.delete('/user/watchlist');
+  return response.data;
+};
+
 // ============================================
-// SOCIAL (Coming Soon)
+// SOCIAL
 // ============================================
 
 export const getMovieComments = async (tmdbId) => {
@@ -167,6 +192,11 @@ export const updateComment = async (commentId, content) => {
 
 export const deleteComment = async (commentId) => {
   const response = await api.delete(`/comments/${commentId}`);
+  return response.data;
+};
+
+export const getActivityFeed = async (page = 1, limit = 10) => {
+  const response = await api.get('/feed', { params: { page, limit } });
   return response.data;
 };
 
@@ -423,6 +453,8 @@ Content-Type: application/json
 
 **Errors:** `400` (missing fields), `401` (invalid credentials), `500` (server error)
 
+**Note:** Returns 401 (not 400) for invalid credentials for proper HTTP semantics
+
 ---
 
 ### Movies
@@ -545,30 +577,205 @@ Authorization: Bearer {token}  (optional)
 
 ---
 
-### User Endpoints (Coming Soon)
+### User Endpoints
 
 | Endpoint | Method | Auth | Description |
 |----------|--------|------|-------------|
-| `/api/user/profile` | GET | Required | Get user profile |
-| `/api/user/statistics` | GET | Required | Get user stats |
-| `/api/user/rate` | POST | Required | Rate a movie (body: `{tmdbId, rating}`) |
-| `/api/user/ratings` | GET | Required | Get user's ratings |
-| `/api/user/favorite` | POST | Required | Toggle favorite (body: `{tmdbId}`) |
-| `/api/user/favorites` | GET | Required | Get user's favorites |
-| `/api/user/watchlist` | POST | Required | Toggle watchlist (body: `{tmdbId}`) |
-| `/api/user/watchlist` | GET | Required | Get user's watchlist |
+| `/api/user/profile` | GET | Required | Get user profile (excludes password) |
+| `/api/user/statistics` | GET | Required | Get user stats (ratings count, avg, favorites, watchlist, member since) |
+| `/api/user/rate` | POST | Required | Rate a movie (body: `{tmdbId, rating}` - rating 1-10) |
+| `/api/user/ratings` | GET | Required | Get user's ratings with movie details |
+| `/api/user/ratings` | DELETE | Required | Clear all ratings |
+| `/api/user/favorite` | POST | Required | Toggle favorite (body: `{tmdbId}`) - returns `{isFavorite: boolean}` |
+| `/api/user/favorites` | GET | Required | Get user's favorites with movie details |
+| `/api/user/favorites` | DELETE | Required | Clear all favorites |
+| `/api/user/watchlist` | POST | Required | Toggle watchlist (body: `{tmdbId}`) - returns `{isInWatchlist: boolean}` |
+| `/api/user/watchlist` | GET | Required | Get user's watchlist with movie details |
+| `/api/user/watchlist` | DELETE | Required | Clear all watchlist items |
+
+#### Example: Rate Movie
+```http
+POST /api/user/rate
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "tmdbId": 550,
+  "rating": 9
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Rating saved successfully"
+}
+```
+
+**Errors:** `400` (invalid rating, must be 1-10), `401` (not authenticated), `500` (server error)
 
 ---
 
-### Social Endpoints (Coming Soon)
+#### Example: Toggle Favorite
+```http
+POST /api/user/favorite
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "tmdbId": 550
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Added to favorites",
+  "isFavorite": true
+}
+```
+
+Or when removing:
+```json
+{
+  "message": "Removed from favorites",
+  "isFavorite": false
+}
+```
+
+---
+
+#### Example: Get User Statistics
+```http
+GET /api/user/statistics
+Authorization: Bearer {token}
+```
+
+**Response (200):**
+```json
+{
+  "moviesRated": 15,
+  "averageRating": 8.3,
+  "favoriteCount": 8,
+  "watchlistCount": 12,
+  "memberSince": "2025-10-01"
+}
+```
+
+---
+
+### Social Endpoints
 
 | Endpoint | Method | Auth | Description |
 |----------|--------|------|-------------|
-| `/api/comments/:tmdbId` | GET | Optional | Get movie comments |
+| `/api/comments/:tmdbId` | GET | Public | Get movie comments (sorted by newest first) |
 | `/api/comments` | POST | Required | Add comment (body: `{tmdbId, content}`) |
-| `/api/comments/:id` | PUT | Required | Update comment (body: `{content}`) |
-| `/api/comments/:id` | DELETE | Required | Delete comment |
-| `/api/feed` | GET | Required | Get activity feed |
+| `/api/comments/:id` | PUT | Required | Update own comment (body: `{content}`) |
+| `/api/comments/:id` | DELETE | Required | Delete own comment |
+| `/api/feed` | GET | Public | Get activity feed (params: `?page=1&limit=10`) |
+
+#### Example: Add Comment
+```http
+POST /api/comments
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "tmdbId": 550,
+  "content": "This movie is amazing!"
+}
+```
+
+**Response (201):**
+```json
+{
+  "_id": "507f1f77bcf86cd799439011",
+  "tmdbId": 550,
+  "userId": "507f191e810c19729de860ea",
+  "userName": "John Doe",
+  "content": "This movie is amazing!",
+  "createdAt": "2025-10-05T12:00:00.000Z",
+  "updatedAt": "2025-10-05T12:00:00.000Z"
+}
+```
+
+**Errors:** `400` (missing tmdbId/content, invalid tmdbId), `401` (not authenticated), `500` (server error)
+
+---
+
+#### Example: Get Movie Comments
+```http
+GET /api/comments/550
+```
+
+**Response (200):**
+```json
+[
+  {
+    "_id": "507f1f77bcf86cd799439011",
+    "tmdbId": 550,
+    "userId": "507f191e810c19729de860ea",
+    "userName": "John Doe",
+    "content": "This movie is amazing!",
+    "createdAt": "2025-10-05T12:00:00.000Z",
+    "updatedAt": "2025-10-05T12:00:00.000Z"
+  }
+]
+```
+
+**Note:** Returns empty array if no comments. Public endpoint (no auth required).
+
+---
+
+#### Example: Update Comment
+```http
+PUT /api/comments/507f1f77bcf86cd799439011
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "content": "Updated: This movie is absolutely fantastic!"
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "Comment updated successfully"
+}
+```
+
+**Errors:** `400` (invalid comment ID, missing content), `401` (not authenticated), `404` (comment not found or not owner), `500` (server error)
+
+**Note:** Users can only update their own comments. Attempting to update another user's comment returns 404.
+
+---
+
+#### Example: Get Activity Feed
+```http
+GET /api/feed?page=1&limit=10
+```
+
+**Response (200):**
+```json
+{
+  "items": [
+    {
+      "_id": "507f1f77bcf86cd799439011",
+      "tmdbId": 550,
+      "userId": "507f191e810c19729de860ea",
+      "userName": "John Doe",
+      "content": "This movie is amazing!",
+      "createdAt": "2025-10-05T12:00:00.000Z",
+      "updatedAt": "2025-10-05T12:00:00.000Z"
+    }
+  ],
+  "page": 1,
+  "hasMore": false
+}
+```
+
+**Note:** Public endpoint. Returns recent comments across all movies with pagination.
 
 ---
 
@@ -723,4 +930,6 @@ curl http://localhost:5000/api/movies/550 \
 ---
 
 **API Version:** 1.0
-**Backend Status:** ✅ Running and tested (27/27 tests passing)
+**Backend Status:** ✅ Production-ready (61/61 tests passing - 100%)
+**Features:** All endpoints implemented and tested (Auth, Movies, User, Social)
+**Ready for:** Frontend integration
