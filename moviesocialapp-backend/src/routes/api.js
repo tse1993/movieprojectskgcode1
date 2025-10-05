@@ -5,6 +5,7 @@ const router = express.Router();
 const authController = require('../controllers/authController');
 const movieController = require('../controllers/movieController');
 const socialController = require('../controllers/socialController');
+const userController = require('../controllers/userController');
 
 // Middleware
 const { authenticateToken, optionalAuth } = require('../middleware/auth');
@@ -36,5 +37,24 @@ router.delete('/comments/:id', authenticateToken, socialController.deleteComment
 // SOCIAL ROUTES - FEED
 // Get activity feed (public)
 router.get('/feed', socialController.getFeed);
+
+// User routes
+
+router.get('/user/ratings', authenticateToken, userController.getUserRatings);
+router.post('/user/ratings', authenticateToken, userController.addOrUpdateRating);
+router.get('/user/ratings/:tmdbId', authenticateToken, userController.getRatingForMovie);
+router.delete('/user/ratings/:tmdbId', authenticateToken, userController.deleteRating);
+
+router.get('/user/favorites', authenticateToken, userController.getFavorites);
+router.post('/user/favorites', authenticateToken, userController.addToFavorites);
+router.get('/user/favorites/:tmdbId', authenticateToken, userController.isFavorite);
+router.delete('/user/favorites/:tmdbId', authenticateToken, userController.removeFromFavorites);
+
+router.get('/user/watchlist', authenticateToken, userController.getWatchlist);
+router.post('/user/watchlist', authenticateToken, userController.addToWatchlist);
+router.get('/user/watchlist/:tmdbId', authenticateToken, userController.isInWatchlist);
+router.delete('/user/watchlist/:tmdbId', authenticateToken, userController.removeFromWatchlist);
+
+router.get('/user/stats', authenticateToken, userController.getUserStats);
 
 module.exports = router;

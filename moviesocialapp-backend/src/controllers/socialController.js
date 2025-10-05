@@ -46,15 +46,18 @@ class SocialController {
         return res.status(400).json({ message: 'Comment content is required' });
       }
 
+      // ✅ Convert userId to ObjectId for querying
+      const userObjectId = userId instanceof ObjectId ? userId : new ObjectId(userId);
+
       // Get user name
-      const user = await db.collection('users').findOne({ _id: userId });
+      const user = await db.collection('users').findOne({ _id: userObjectId });
       if (!user) {
         return res.status(404).json({ message: 'User not found' });
       }
 
       const comment = {
         tmdbId: parseInt(tmdbId),
-        userId,
+        userId: userObjectId,  // ✅ Store as ObjectId
         userName: user.name,
         content: content.trim(),
         createdAt: new Date(),
@@ -92,10 +95,13 @@ class SocialController {
         return res.status(400).json({ message: 'Content is required' });
       }
 
+      // ✅ Convert userId to ObjectId for comparison
+      const userObjectId = userId instanceof ObjectId ? userId : new ObjectId(userId);
+
       // Check if comment exists and belongs to user
       const comment = await db.collection('comments').findOne({
         _id: new ObjectId(id),
-        userId
+        userId: userObjectId  // ✅ Compare as ObjectId
       });
 
       if (!comment) {
@@ -134,10 +140,13 @@ class SocialController {
         return res.status(400).json({ message: 'Invalid comment ID' });
       }
 
+      // ✅ Convert userId to ObjectId for comparison
+      const userObjectId = userId instanceof ObjectId ? userId : new ObjectId(userId);
+
       // Check if comment exists and belongs to user
       const comment = await db.collection('comments').findOne({
         _id: new ObjectId(id),
-        userId
+        userId: userObjectId  // ✅ Compare as ObjectId
       });
 
       if (!comment) {
