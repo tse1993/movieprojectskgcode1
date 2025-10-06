@@ -1,6 +1,6 @@
 import MovieDetailsView from "./MovieDetailsView.jsx";
 
-/** @typedef {import("../../assets/types/movieDisplays/movieStruct").movieDetailsProps} movieDetailsProps */
+/** @typedef {import("../../assets/types/pagesProps/movieDetailsProp").movieDetailsProps} movieDetailsProps */
 /** @typedef {import("../../assets/types/feed/movieComment").MovieComment} movieComment */
 
 /**
