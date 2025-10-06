@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import StarRatingView from "./StarRatingView.jsx";
 
-/** @typedef {import("../types/pagesProps/starRatingProps").StarRatingProps} StarRatingProps */
+/** @typedef {import("../../assets/types/pagesProps/starRatingProps").StarRatingProps} StarRatingProps */
 
 /** @param {StarRatingProps} props */
 export default function StarRatingPage({ movieId, initialRating = 0, onRate, className }) {

@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from "../../assets/ui/button";
 import { getNewReleases } from "@/data/movies";
 
 import MovieGridPage from "../MovieGrid/MovieGridPage";
 import MovieDetailsPage from "../MovieDetails/MovieDetailsPage";
 
-/** @typedef {import("../types/movieDisplays/movieStruct").Movie} Movie */
-/** @typedef {import("../types/pagesProps/newReleasesPageProps").NewReleasesPageProps} NewReleasesPageProps */
+/** @typedef {import("../../assets/types/movieDisplays/movieStruct").Movie} Movie */
+/** @typedef {import("../../assets/types/pagesProps/newReleasesPageProps").NewReleasesPageProps} NewReleasesPageProps */
 
 /** @param {NewReleasesPageProps} props */
 export default function NewReleasesView(props) {

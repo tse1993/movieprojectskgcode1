@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Send, MessageSquare } from "lucide-react";
-import { Button } from "../ui/button";
-import { Textarea } from "../ui/textarea";
-import { Avatar } from "../ui/avatar";
-import { Separator } from "../ui/separator";
+import { Button } from "../../assets/ui/button";
+import { Textarea } from "../../assets/ui/textarea";
+import { Avatar } from "../../assets/ui/avatar";
+import { Separator } from "../../assets/ui/separator";
 import { toast } from "sonner";
 
-/** @typedef {import("../types/feed/movieComment").movieComment} movieComment */
-/** @typedef {import("../types/pagesProps/movieCommentsProps").movieCommentsProps} movieCommentsProps */
+/** @typedef {import("../../assets/types/feed/movieComment").movieComment} movieComment */
+/** @typedef {import("../../assets/types/pagesProps/movieCommentsProps").movieCommentsProps} movieCommentsProps */
 
 /**
  * View: καθαρό UI για τα comments.

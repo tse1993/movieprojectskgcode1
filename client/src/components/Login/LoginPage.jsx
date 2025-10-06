@@ -2,10 +2,7 @@ import { useState } from "react";
 
 import LoginView from "./LoginView.jsx";
 
-/**
- * @typedef {Object} LoginPageProps
- * @property {(email: string) => void} onLogin
- */
+/** @typedef {import("../../assets/types/pagesProps/LoginPageProps").LoginPageProps} LoginPageProps */
 
 /** @param {LoginPageProps} props */
 export default function LoginPage({ onLogin }) {

@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from "../../assets/ui/button";
 import { getPopularMovies } from "@/data/movies";
 import MovieGridPage from "../MovieGrid/MovieGridPage";
 import MovieDetailsPage from "../MovieDetails/MovieDetailsPage";
 
-/** @typedef {import("../types/movieDisplays/movieStruct").Movie} Movie */
-/** @typedef {import("../types/pagesProps/popularMoviesPage").PopularMoviesPageProps} PopularMoviesPageProps */
+/** @typedef {import("../../assets/types/movieDisplays/movieStruct").Movie} Movie */
+/** @typedef {import("../../assets/types/pagesProps/popularMoviesPage").PopularMoviesPageProps} PopularMoviesPageProps */
 
 /** @param {PopularMoviesPageProps} props */
 export default function PopularMoviesView(props) {

@@ -1,9 +1,9 @@
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import { Button } from "../ui/button";
+import { Button } from "../../assets/ui/button";
 import MovieCardPage from "../MovieCard/MovieCardPage.jsx";
 
-/** @typedef {import("../types/movie-section").MovieSectionProps} MovieSectionProps */
+/** @typedef {import("../../assets/types/movie-section").MovieSectionProps} MovieSectionProps */
 
 /** @param {MovieSectionProps} props */
 export default function MovieSectionView({

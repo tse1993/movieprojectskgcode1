@@ -1,6 +1,6 @@
 import MovieCardView from "./MovieCardView.jsx";
 
-/** @typedef {import("../types/pagesProps/movieCardProps").MovieCardProps}  MovieCardProps */
+/** @typedef {import("../../assets/types/pagesProps/movieCardProps").MovieCardProps}  MovieCardProps */
 
 /**
  * Container: απλώς περνάει τα props στη view.

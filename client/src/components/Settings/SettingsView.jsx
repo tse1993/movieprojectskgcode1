@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { ArrowLeft, User, Lock, Save } from "lucide-react";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
-import { Separator } from "../ui/separator";
+import { Button } from "../../assets/ui/button";
+import { Input } from "../../assets/ui/input";
+import { Label } from "../../assets/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../assets/ui/card";
+import { Separator } from "../../assets/ui//separator";
 import { toast } from "sonner";
 
-/** @typedef {import("../types/pagesProps/settingsPageProps").SettingsPageProps} SettingsPageProps */
+/** @typedef {import("../../assets/types/pagesProps/settingsPageProps").SettingsPageProps} SettingsPageProps */
 
 /** @param {SettingsPageProps} props */
 export default function SettingsView({ user, onUpdateUser, onBack }) {

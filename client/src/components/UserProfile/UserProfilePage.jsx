@@ -2,7 +2,7 @@ import { useState } from "react";
 import { movies } from "@/data/movies";
 import UserProfileView from "./UserProfileView.jsx";
 
-/** @typedef {import("./types/pagesProps/UserProfilePageProps").UserProfilePageProps} UserProfilePageProps */
+/** @typedef {import("../../assets/types/pagesProps/UserProfilePageProps").UserProfilePageProps} UserProfilePageProps */
 
 /** @param {UserProfilePageProps} props */
 export default function UserProfilePage(props) {

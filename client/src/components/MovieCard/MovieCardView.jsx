@@ -1,8 +1,8 @@
 import { Star, Calendar } from "lucide-react";
-import { Card, CardContent } from "../ui/card";
-import { Badge } from "../ui/badge";
+import { Card, CardContent } from "../../assets/ui/card";
+import { Badge } from "../../assets/ui/badge";
 
-/** @typedef {import("../types/pagesProps/movieCardProps").MovieCardProps}  MovieCardProps */
+/** @typedef {import("../../assets/types/pagesProps/movieCardProps").MovieCardProps}  MovieCardProps */
 
 /**
  * View: καθαρό UI.

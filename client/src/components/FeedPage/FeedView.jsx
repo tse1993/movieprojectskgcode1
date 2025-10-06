@@ -1,18 +1,11 @@
 import { ArrowLeft, MessageCircle, Star, Calendar, Film } from "lucide-react";
-import { Button } from "../ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Separator } from "../ui/separator";
-import { Badge } from "../ui/badge";
+import { Button } from "../../assets/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../../assets/ui/card";
+import { Separator } from "../../assets/ui/separator";
+import { Badge } from "../../assets/ui/badge";
 
-/** @typedef {import("../types/feed/comment").Comment} Comment */
-
-/**
- * @typedef {Object} FeedViewProps
- * @property {{ email:string, name?:string } | null} user
- * @property {() => void} onBack
- * @property {Comment[]} comments
- * @property {(dateString:string)=>string} formatDate
- */
+/** @typedef {import("../../assets/types/feed/comment").Comment} Comment */
+/** @typedef {import("../../assets/types/pagesProps/FeedViewProps").FeedViewProps} FeedViewProps */
 
 /** @param {FeedViewProps} props */
 export default function FeedView({ user, onBack, comments, formatDate }) {

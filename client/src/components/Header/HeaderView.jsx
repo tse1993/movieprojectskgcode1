@@ -1,6 +1,6 @@
 import { Search, LogOut, User, MessageCircle, ChevronDown, Settings } from "lucide-react";
-import { Input } from "../ui/input";
-import { Button } from "../ui/button";
+import { Input } from "../../assets/ui/input";
+import { Button } from "../../assets/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,9 +8,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+} from "../../assets/ui/dropdown-menu";
 
-/** @typedef {import("../types/pagesProps/HeaderProps").HeaderProps} HeaderProps */
+/** @typedef {import("../../assets/types/pagesProps/HeaderProps").HeaderProps} HeaderProps */
 
 /** @param {HeaderProps} props */
 export default function HeaderView({

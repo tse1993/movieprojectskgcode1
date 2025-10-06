@@ -1,7 +1,7 @@
 import { Star } from "lucide-react";
-import { cn } from "../../lib/utils";
+import { cn } from "../../assets/lib/utils";
 
-/** @typedef {import("../types/pagesProps/starRatingViewProps").StarRatingProps} StarRatingProps */
+/** @typedef {import("../../assets/types/pagesProps/starRatingViewProps").StarRatingProps} StarRatingProps */
 
 /** @param {StarRatingProps} props */
 export default function StarRatingView({

@@ -7,3 +7,5 @@
  * @property {()=>void} onMouseLeave
  * @property {string} [className]
  */
+
+export {};

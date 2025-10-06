@@ -1,8 +1,8 @@
 import { Play, Info, Star } from "lucide-react";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
+import { Button } from "../../assets/ui/button";
+import { Badge } from "../../assets/ui/badge";
 
-/** @typedef {import("../types/movieDisplays/featuredMovie").HeroSectionProps} HeroSectionProps */
+/** @typedef {import("../../assets/types/movieDisplays/featuredMovie").HeroSectionProps} HeroSectionProps */
 /** @param {HeroSectionProps} props */
 export default function HeroSectionView({ featuredMovie, onMovieClick }) {
   return (

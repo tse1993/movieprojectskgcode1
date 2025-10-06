@@ -6,7 +6,7 @@ import MovieDetailsPage from "./MovieDetails/MovieDetailsPage.jsx";
 import MovieSectionPage from "./MovieSection/MovieSectionPage.jsx";
 import MovieCommentsPage from "./MovieComments/MovieCommentsPage.jsx";
 
-import { Button } from "./ui/button";
+import { Button } from "../assets/ui/button";
 import { movies, genres, getMoviesByGenre, searchMovies, getPopularMovies, getTopRatedMovies, getNewReleases } from "../data/movies";
 
 // @ts-check

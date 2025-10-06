@@ -1,7 +1,7 @@
 import MovieDetailsView from "./MovieDetailsView.jsx";
 
-/** @typedef {import("../types/movieDisplays/movieStruct").movieDetailsProps} movieDetailsProps */
-/** @typedef {import("../types/feed/movieComment").MovieComment} movieComment */
+/** @typedef {import("../../assets/types/movieDisplays/movieStruct").movieDetailsProps} movieDetailsProps */
+/** @typedef {import("../../assets/types/feed/movieComment").MovieComment} movieComment */
 
 /**
  * Container: περνάει τα props στη View.

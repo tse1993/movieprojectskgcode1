@@ -1,14 +1,14 @@
 import { Star, Calendar, Clock, Play, Heart, Bookmark } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../ui/dialog";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import { Separator } from "../ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../assets/ui/dialog";
+import { Button } from "../../assets/ui/button";
+import { Badge } from "../../assets/ui/badge";
+import { Separator } from "../../assets/ui/separator";
 import StarRatingPage from "../StarRating/StarRatingPage";
 import MovieCommentsPage from "../MovieComments/MovieCommentsPage";
 import { toast } from "sonner";
 
-/** @typedef {import("../types/movieDisplays/movieStruct").movieDetailsProps} movieDetailsProps */
-/** @typedef {import("../types/feed/movieComment").MovieComment} movieComment */
+/** @typedef {import("../../assets/types/movieDisplays/movieStruct").movieDetailsProps} movieDetailsProps */
+/** @typedef {import("../../assets/types/feed/movieComment").MovieComment} movieComment */
 
 /**
  * View: περιέχει μόνο το UI + τοπικούς handlers.

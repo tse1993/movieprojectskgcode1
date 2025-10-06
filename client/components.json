@@ -4,15 +4,14 @@
   "tsx": false,
   "style": "default",
   "tailwind": {
-    "config": "tailwind.config.js", 
+    "config": "tailwind.config.js",
     "css": "src/index.css",
     "baseColor": "neutral",
     "cssVariables": true
   },
   "aliases": {
     "components": "@/components",
-    "utils": "@/lib/utils",
-    "ui": "@/components/ui"
-  }  
+    "utils": "@/assets/lib/utils",
+    "ui": "@/assets/ui"
+  }
 }
-

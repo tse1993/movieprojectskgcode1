@@ -1,11 +1,11 @@
 import { Eye, EyeOff, Film, Star, Users, Bookmark } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../assets/ui/card";
+import { Button } from "../../assets/ui/button";
+import { Input } from "../../assets/ui/input";
+import { Label } from "../../assets/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../assets/ui/tabs";
 
-/** @typedef {import("../types/pagesProps/loginViewProps").LoginViewProps} LoginViewProps */
+/** @typedef {import("../../assets/types/pagesProps/loginViewProps").LoginViewProps} LoginViewProps */
 
 /** @param {LoginViewProps} props */
 export default function LoginView({

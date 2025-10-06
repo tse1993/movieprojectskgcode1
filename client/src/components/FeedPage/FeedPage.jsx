@@ -1,7 +1,7 @@
 import FeedView from "./FeedView.jsx";
 import { mockComments } from "@/data/comments";
 
-/** @typedef {import("../types/pagesProps/feedPageProps").FeedPageProps} FeedPageProps */
+/** @typedef {import("../../assets/types/pagesProps/feedPageProps").FeedPageProps} FeedPageProps */
 
 /**
  * Container: κρατάει το minimal logic (formatDate) και τα δεδομένα (mockComments)

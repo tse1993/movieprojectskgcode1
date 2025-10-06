@@ -1,15 +1,9 @@
 // src/components/pages/CookieNotificationView.jsx
 import { X, Cookie } from "lucide-react";
-import { Button } from "../ui/button";
-import { Card } from "../ui/card";
+import { Button } from "../../assets/ui/button";
+import { Card } from "../../assets/ui/card";
 
-/**
- * @typedef {Object} CookieNotificationViewProps
- * @property {boolean} isOpen
- * @property {() => void} onAccept
- * @property {() => void} onDecline
- * @property {() => void} onDismiss
- */
+/** @typedef {import("../../assets/types/pagesProps/CookieNotificationViewProps").CookieNotificationViewProps} CookieNotificationViewProps */
 
 /**
  * View: μόνο το UI/markup.

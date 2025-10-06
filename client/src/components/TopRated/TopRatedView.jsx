@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from "../../assets/ui/button";
 import MovieDetailsPage from "../MovieDetails/MovieDetailsPage";
 import MovieGridPage from "../MovieGrid/MovieGridPage";
 import { getTopRatedMovies } from "@/data/movies";
 
-/** @typedef {import("../types/pagesProps/topRatedPageProps").TopRatedPageProps} TopRatedPageProps */
-/** @typedef {import("../types/movieDisplays/movieStruct").Movie} Movie */
+/** @typedef {import("../../assets/types/pagesProps/topRatedPageProps").TopRatedPageProps} TopRatedPageProps */
+/** @typedef {import("../../assets/types/movieDisplays/movieStruct").Movie} Movie */
 
 /** @param {TopRatedPageProps} props */
 export default function TopRatedView(props) {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import CookieNotificationView from "./CookieNotificationView.jsx";
 
-/** @typedef {import("../types/pagesProps/CookieNotificationProps").CookieNotificationProps} CookieNotificationProps */
+/** @typedef {import("../../assets/types/pagesProps/CookieNotificationProps").CookieNotificationProps} CookieNotificationProps */
 
 /**
  * Container: διαχειρίζεται state, localStorage και business logic.
