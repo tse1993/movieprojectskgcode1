@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { movies } from "@/data/movies";
 
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
-import { Progress } from "./ui/progress";
-import { Separator } from "./ui/separator";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./ui/alert-dialog";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Progress } from "../ui/progress";
+import { Separator } from "../ui/separator";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
 import { ArrowLeft, User, Star, Heart, Bookmark, Calendar, Filter, GridIcon, List, Users, Play, Trash2, TrendingUp, Award, Clock } from "lucide-react";
 
 /** @typedef {import("./types/pagesProps/UserProfilePageProps").UserProfilePageProps} UserProfilePageProps */

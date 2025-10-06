@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { X, Cookie } from "lucide-react";
-import { Button } from "./ui/button";
-import { Card } from "./ui/card";
+import { Button } from "../ui/button";
+import { Card } from "../ui/card";
 
 /** @typedef {import("./types/pagesProps/CookieNotificationProps").CookieNotificationProps} CookieNotificationProps */
 
@@ -9,7 +9,7 @@ import { Card } from "./ui/card";
  * Cookie consent banner.
  * @param {CookieNotificationProps} props
  */
-export default function CookieNotification({ isMoviePopupOpen = false }) {
+export default function CookieNotificationPage({ isMoviePopupOpen = false }) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {

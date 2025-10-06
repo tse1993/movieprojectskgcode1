@@ -1,8 +1,8 @@
 import { ArrowLeft, MessageCircle, Star, Calendar, Film } from "lucide-react";
-import { Button } from "./ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Separator } from "./ui/separator";
-import { Badge } from "./ui/badge";
+import { Button } from "../ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Separator } from "../ui/separator";
+import { Badge } from "../ui/badge";
 import { mockComments } from "@/data/comments";
 
 /** @typedef {import("./types/feed/comment").Comment} Comment */

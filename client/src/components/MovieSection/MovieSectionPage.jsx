@@ -1,14 +1,14 @@
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import { Button } from "./ui/button";
-import { MovieCard } from "./MovieCard.jsx";
+import { Button } from "../ui/button";
+import { MovieCardPage } from "../MovieCard/MovieCardPage";
 
 //types
-/** @typedef {import("./types/movieDisplays/movieStruct").Movie} Movie */
+/** @typedef {import("../types/movieDisplays/movieStruct").Movie} Movie */
 /** @typedef {import("../types/movie-section").MovieSectionProps} MovieSectionProps */
 
 /** @param {MovieSectionProps} props */
-export default function MovieSection({
+export default function MovieSectionPage({
   title,
   movies,
   onMovieClick,
@@ -102,7 +102,7 @@ export default function MovieSection({
         >
           {displayMovies.map((movie) => (
             <div key={movie.id} className="flex-none w-72">
-              <MovieCard
+              <MovieCardPage
                 movie={movie}
                 onClick={() => onMovieClick(movie)}
                 onRateMovie={onRateMovie}

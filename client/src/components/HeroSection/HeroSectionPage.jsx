@@ -1,13 +1,13 @@
 // src/components/HeroSection.jsx
 import { Play, Info, Star } from "lucide-react";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
 
-/** @typedef {import("../types/movieDisplays/movie").Movie} Movie */
+/** @typedef {import("../types/movieDisplays/movieStruct").Movie} Movie */
 /** @typedef {import("../types/movieDisplays/featuredMovie").HeroSectionProps} HeroSectionProps */
 
 /** @param {HeroSectionProps} props */
-export default function HeroSection({ featuredMovie, onMovieClick }) {
+export default function HeroSectionPage({ featuredMovie, onMovieClick }) {
   if (!featuredMovie) return null;
 
   return (

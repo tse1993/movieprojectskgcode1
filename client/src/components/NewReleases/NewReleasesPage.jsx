@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
-import { Button } from "./ui/button";
-import { getPopularMovies } from "@/data/movies";
-import MovieDetails from "./MovieDetails.jsx";
-import MovieGrid from "./MovieGrid.jsx";
+import { Button } from "../ui/button";
+import { getNewReleases } from "@/data/movies";
+
+import MovieGridPage from "../MovieGrid/MovieGridPage";
+import MovieDetailsPage from "../MovieDetails/MovieDetailsPage";
 
 /** @typedef {import("./types/movieDisplays/movieStruct").Movie} Movie */
-/** @typedef {import("./types/pagesProps/popularMoviesPage").PopularMoviesPageProps} PopularMoviesPageProps */
+/** @typedef {import("./types/pagesProps/newReleasesPageProps").NewReleasesPageProps} NewReleasesPageProps */
 
 /**
- * @param {PopularMoviesPageProps} props
+ * @param {NewReleasesPageProps} props
  */
-export default function PopularMoviesPage(props) {
+export default function NewReleasesPage(props) {
   const {
     user,
     onBack,
@@ -29,18 +30,18 @@ export default function PopularMoviesPage(props) {
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
-  const popularMovies = getPopularMovies();
+  const newReleases = getNewReleases();
 
   const handleMovieClick = (movie) => {
     setSelectedMovie(movie);
     setIsDetailsOpen(true);
-    onMoviePopupChange(true);
+    onMoviePopupChange?.(true);
   };
 
   const handleCloseDetails = () => {
     setIsDetailsOpen(false);
     setSelectedMovie(null);
-    onMoviePopupChange(false);
+    onMoviePopupChange?.(false);
   };
 
   return (
@@ -52,7 +53,7 @@ export default function PopularMoviesPage(props) {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
-          <h1 className="text-xl font-semibold">Popular Movies</h1>
+          <h1 className="text-xl font-semibold">New Releases</h1>
         </div>
       </div>
 
@@ -60,16 +61,16 @@ export default function PopularMoviesPage(props) {
       <main className="container px-4 py-8">
         <div className="mb-6">
           <p className="text-muted-foreground">
-            Discover the most popular movies on our platform. These are the
-            highest-rated films that our community loves.
+            Stay up to date with the latest movie releases. Discover fresh
+            content that has recently joined our platform.
           </p>
           <p className="text-sm text-muted-foreground mt-2">
-            Showing {popularMovies.length} popular movies
+            Showing {newReleases.length} new releases from the last 6 months
           </p>
         </div>
 
-        <MovieGrid
-          movies={popularMovies}
+        <MovieGridPage
+          movies={newReleases}
           onMovieClick={handleMovieClick}
           onRateMovie={onRateMovie}
           getUserRatingForMovie={getUserRatingForMovie}
@@ -82,7 +83,7 @@ export default function PopularMoviesPage(props) {
 
       {/* Movie Details Modal */}
       {selectedMovie && (
-        <MovieDetails
+        <MovieDetailsPage
           movie={selectedMovie}
           isOpen={isDetailsOpen}
           onClose={handleCloseDetails}

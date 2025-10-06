@@ -1,13 +1,13 @@
 import { Star, Calendar } from "lucide-react";
-import { Card, CardContent } from "./ui/card";
-import { Badge } from "./ui/badge";
+import { Card, CardContent } from "../ui/card";
+import { Badge } from "../ui/badge";
 
-/** @typedef {import("./types/pagesProps/MovieCardProps").MovieCardProps}  MovieCardProps */
+/** @typedef {import("../types/pagesProps/movieCardProps").MovieCardProps}  MovieCardProps */
 
 /**
  * @param {MovieCardProps} props
  */
-export function MovieCard(props) {
+export function MovieCardPage(props) {
     const { 
       movie, 
       onClick 

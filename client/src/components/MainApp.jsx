@@ -1,10 +1,10 @@
 import { useState } from "react";
-import Header from "./Header.jsx";
-import HeroSection from "./HeroSection.jsx";
-import MovieGrid from "./MovieGrid.jsx";
-import MovieDetails from "./MovieDetails.jsx";
-import MovieSection from "./MovieSection.jsx";
-import MovieComment from "./MovieComments.jsx";
+import Header from "./Header/HeaderPage.jsx";
+import HeroSectionPage from "./HeroSection/HeroSectionPage.jsx";
+import MovieGridPage from "./MovieGrid/MovieGridPage.jsx";
+import MovieDetailsPage from "./MovieDetails/MovieDetailsPage.jsx";
+import MovieSectionPage from "./MovieSection/MovieSectionPage.jsx";
+import MovieCommentsPage from "./MovieComments/MovieCommentsPage.jsx";
 
 import { Button } from "./ui/button";
 import { movies, genres, getMoviesByGenre, searchMovies, getPopularMovies, getTopRatedMovies, getNewReleases } from "../data/movies";
@@ -96,7 +96,7 @@ export default function MainApp({
       />
       
       {!searchQuery && selectedGenre === "All" && (
-        <HeroSection 
+        <HeroSectionPage 
           featuredMovie={featuredMovie} 
           onMovieClick={handleMovieClick}
         />
@@ -123,7 +123,7 @@ export default function MainApp({
         <div className="w-full space-y-12 pb-8">
           {/* Popular Movies Section */}
           <div className="container px-4">
-            <MovieSection
+            <MovieSectionPage
               title="Popular Movies"
               movies={getPopularMovies()}
               onMovieClick={handleMovieClick}
@@ -139,7 +139,7 @@ export default function MainApp({
 
           {/* Top Rated Section */}
           <div className="container px-4">
-            <MovieSection
+            <MovieSectionPage
               title="Top Rated"
               movies={getTopRatedMovies()}
               onMovieClick={handleMovieClick}
@@ -155,7 +155,7 @@ export default function MainApp({
 
           {/* New Releases Section */}
           <div className="container px-4">
-            <MovieSection
+            <MovieSectionPage
               title="New Releases"
               movies={getNewReleases()}
               onMovieClick={handleMovieClick}
@@ -174,7 +174,7 @@ export default function MainApp({
       {/* Movies Grid - Only show when filtering */}
       {(searchQuery || selectedGenre !== "All") && (
         <main className="container px-4 py-8">
-          <MovieGrid
+          <MovieGridPage
             movies={gridMovies}
             onMovieClick={handleMovieClick}
             title={
@@ -192,7 +192,7 @@ export default function MainApp({
         </main>
       )}
 
-      <MovieDetails
+      <MovieDetailsPage
         movie={selectedMovie}
         isOpen={isDetailsOpen}
         onClose={handleCloseDetails}

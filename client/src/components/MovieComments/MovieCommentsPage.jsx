@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { Send, MessageSquare } from "lucide-react";
-import { Button } from "./ui/button";
-import { Textarea } from "./ui/textarea";
-import { Avatar } from "./ui/avatar";
-import { Separator } from "./ui/separator";
+import { Button } from "../ui/button";
+import { Textarea } from "../ui/textarea";
+import { Avatar } from "../ui/avatar";
+import { Separator } from "../ui/separator";
 import { toast } from "sonner";
 
 //types
 /** @typedef {import("./types/feed/movieComment").movieComment} movieComment */
 /** @typedef {import("./types/pagesProps/movieCommentsProps").movieCommentsProps} movieCommentsProps */
 
-export default function MovieComments({ movieId, comments, currentUserName, onAddComment }) {
+export default function MovieCommentsPage({ movieId, comments, currentUserName, onAddComment }) {
     const [newComment, setNewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 

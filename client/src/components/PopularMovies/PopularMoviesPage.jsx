@@ -1,17 +1,17 @@
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
-import { Button } from "./ui/button";
-import MovieDetails from "./MovieDetails.jsx";
-import MovieGrid from "./MovieGrid.jsx";
-import { getTopRatedMovies } from "@/data/movies";
+import { Button } from "../ui/button";
+import { getPopularMovies } from "@/data/movies";
+import MovieDetailsPage from "../MovieDetails/MovieDetailsPage";
+import MovieGridPage from "../MovieGrid/MovieGridPage";
 
 /** @typedef {import("./types/movieDisplays/movieStruct").Movie} Movie */
-/** @typedef {import("./types/pagesProps/topRatedPageProps").TopRatedPageProps} TopRatedPageProps */
+/** @typedef {import("./types/pagesProps/popularMoviesPage").PopularMoviesPageProps} PopularMoviesPageProps */
 
 /**
- * @param {TopRatedPageProps} props
+ * @param {PopularMoviesPageProps} props
  */
-export default function TopRatedPage(props) {
+export default function PopularMoviesPage(props) {
   const {
     user,
     onBack,
@@ -26,13 +26,11 @@ export default function TopRatedPage(props) {
     isMovieInWatchlist,
   } = props;
 
-  /** @type {Movie|null} */
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
-  const topRatedMovies = getTopRatedMovies();
+  const popularMovies = getPopularMovies();
 
-  /** @param {Movie} movie */
   const handleMovieClick = (movie) => {
     setSelectedMovie(movie);
     setIsDetailsOpen(true);
@@ -54,7 +52,7 @@ export default function TopRatedPage(props) {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
-          <h1 className="text-xl font-semibold">Top Rated Movies</h1>
+          <h1 className="text-xl font-semibold">Popular Movies</h1>
         </div>
       </div>
 
@@ -62,16 +60,16 @@ export default function TopRatedPage(props) {
       <main className="container px-4 py-8">
         <div className="mb-6">
           <p className="text-muted-foreground">
-            Explore the highest-rated movies of all time. These films have
-            received the best scores from our community of movie enthusiasts.
+            Discover the most popular movies on our platform. These are the
+            highest-rated films that our community loves.
           </p>
           <p className="text-sm text-muted-foreground mt-2">
-            Showing {topRatedMovies.length} top-rated movies
+            Showing {popularMovies.length} popular movies
           </p>
         </div>
 
-        <MovieGrid
-          movies={topRatedMovies}
+        <MovieGridPage
+          movies={popularMovies}
           onMovieClick={handleMovieClick}
           onRateMovie={onRateMovie}
           getUserRatingForMovie={getUserRatingForMovie}
@@ -84,7 +82,7 @@ export default function TopRatedPage(props) {
 
       {/* Movie Details Modal */}
       {selectedMovie && (
-        <MovieDetails
+        <MovieDetailsPage
           movie={selectedMovie}
           isOpen={isDetailsOpen}
           onClose={handleCloseDetails}

@@ -1,7 +1,7 @@
 import { Search, Menu, LogOut, User, MessageCircle, ChevronDown, Settings } from "lucide-react";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu";
 
 /**
  * @typedef {Object} HeaderProps
@@ -17,7 +17,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
  * @property {()=>void} [onNavigateToNewReleases]
  */
 
-export default function Header({onSearch,
+export default function HeaderPage({onSearch,
   searchQuery,
   user = null,
   onLogout,

@@ -1,13 +1,13 @@
 import { useState } from "react";
-import LoginPage from "./components/LoginPage.jsx";
+import LoginPage from "./components/Login/LoginPage.jsx";
 import MainApp from "./components/MainApp.jsx";
-import UserProfilePage from "./components/UserProfilePage.jsx";
-import FeedPage from "./components/FeedPage.jsx";
-import PopularMoviesPage from "./components/PopularMoviesPage.jsx";
-import TopRatedPage from "./components/TopRatedPage.jsx";
-import NewReleasesPage from "./components/NewReleasesPage.jsx";
-import CookieNotification from "./components/CookieNotification.jsx";
-import SettingsPage from "./components/SettingsPage.jsx";
+import UserProfilePage from "./components/UserProfile/UserProfilePage.jsx";
+import FeedPage from "./components/FeedPage/FeedPage.jsx";
+import PopularMoviesPage from "./components/PopularMovies/PopularMoviesPage.jsx";
+import TopRatedPage from "./components/TopRated/TopRatedPage.jsx";
+import NewReleasesPage from "./components/NewReleases/NewReleasesPage.jsx";
+import CookieNotificationPage from "./components/CookieNotification/CookieNotificationPage.jsx";
+import SettingsPage from "./components/Settings/SettingsPage.jsx";
 
 /**
  * @typedef {"main"|"settings"|"profile"|"feed"|"popular"|"top_rated"|"new_releases"} AppView
@@ -173,7 +173,7 @@ function App() {
     return (
       <>
         <LoginPage onLogin={handleLogin} />
-        <CookieNotification isMoviePopupOpen={isMoviePopupOpen} />
+        <CookieNotificationPage isMoviePopupOpen={isMoviePopupOpen} />
       </>
     );
   }
@@ -286,7 +286,7 @@ function App() {
   return (
     <>
       {renderView()}
-      <CookieNotification isMoviePopupOpen={isMoviePopupOpen} />
+      <CookieNotificationPage isMoviePopupOpen={isMoviePopupOpen} />
     </>
   );
 }

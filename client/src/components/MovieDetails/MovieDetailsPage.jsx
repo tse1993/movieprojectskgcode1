@@ -1,17 +1,17 @@
 import { Star, Calendar, Clock, Play, Heart, Bookmark } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
-import { Separator } from "./ui/separator";
-import StarRating from "./StarRating.jsx";
-import MovieComments from "./MovieComments.jsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../ui/dialog";
+import { Button } from "../ui/button";
+import { Badge} from "../ui/badge";
+import { Separator } from "../ui/separator";
+import StarRatingPage from "../StarRating/StarRatingPage";
+import MovieCommentsPage from "../MovieComments/MovieCommentsPage";
 import { toast } from "sonner";
 
 //types
-/** @typedef {import("./types/movieDisplays/movieStruct").movieDetailsProps} movieDetailsProps */
-/** @typedef {import("./types/movieDisplays/movieStruct").movieComment} movieComment */
+/** @typedef {import("../types/movieDisplays/movieStruct").movieDetailsProps} movieDetailsProps */
+/** @typedef {import("../types/feed/movieComment").MovieComment} movieComment */
 
-export default function MovieDetails({
+export default function MovieDetailsPage({
   movie,
   isOpen,
   onClose,
@@ -145,7 +145,7 @@ export default function MovieDetails({
                 </Button>
               </div>
               
-              <StarRating
+              <StarRatingPage
                 movieId={movie.id}
                 initialRating={getUserRatingForMovie(movie.id)}
                 onRate={handleRateMovie}
@@ -177,7 +177,7 @@ export default function MovieDetails({
 
             <Separator />
 
-            <MovieComments
+            <MovieCommentsPage
               movieId={movie.id}
               comments={movieComments}
               currentUserName={currentUserName}
