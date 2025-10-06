@@ -1,6 +1,6 @@
 import { useState } from "react";
 import LoginPage from "./components/Login/LoginPage.jsx";
-import MainApp from "./components/MainApp.jsx";
+import MainApp from "./components/Main/MainApp.jsx";
 import UserProfilePage from "./components/UserProfile/UserProfilePage.jsx";
 import FeedPage from "./components/FeedPage/FeedPage.jsx";
 import PopularMoviesPage from "./components/PopularMovies/PopularMoviesPage.jsx";

@@ -1,89 +1,60 @@
-import { useState } from "react";
-import Header from "./Header/HeaderPage.jsx";
-import HeroSectionPage from "./HeroSection/HeroSectionPage.jsx";
-import MovieGridPage from "./MovieGrid/MovieGridPage.jsx";
-import MovieDetailsPage from "./MovieDetails/MovieDetailsPage.jsx";
-import MovieSectionPage from "./MovieSection/MovieSectionPage.jsx";
-import MovieCommentsPage from "./MovieComments/MovieCommentsPage.jsx";
-
-import { Button } from "../assets/ui/button";
-import { movies, genres, getMoviesByGenre, searchMovies, getPopularMovies, getTopRatedMovies, getNewReleases } from "../data/movies";
+import Header from "../Header/HeaderPage.jsx";
+import HeroSectionPage from "../HeroSection/HeroSectionPage.jsx";
+import MovieGridPage from "../MovieGrid/MovieGridPage.jsx";
+import MovieDetailsPage from "../MovieDetails/MovieDetailsPage.jsx";
+import MovieSectionPage from "../MovieSection/MovieSectionPage.jsx";
+import { Button } from "../../assets/ui/button";
 
 // @ts-check
-/** @typedef {import("./types/pagesProps/mainAppProps.js").MainAppProps} MainAppProps*/
+/** @typedef {import("../../assets/types/pagesProps/MainAppViewProps").MainAppViewProps} MainAppViewProps */
 
-export default function MainApp({
-  user,
-  onLogout,
-  onNavigateToSettings,
-  onNavigateToProfile,
-  onNavigateToFeed,
-  onNavigateToPopular,
-  onNavigateToTopRated,
-  onNavigateToNewReleases,
-  onRateMovie,
-  getUserRatingForMovie,
-  onToggleFavorite,
-  isMovieFavorite,
-  onMoviePopupChange,
-  movieComments,
-  onAddComment,
-  onToggleWatchlist,
-  isMovieInWatchlist,
-}) {
-  
-    // state
-    const [selectedMovie, setSelectedMovie] = useState(null);
-    const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-    const [selectedGenre, setSelectedGenre] = useState("All");
-    const [searchQuery, setSearchQuery] = useState("");
+/** @param {MainAppViewProps} props */
+export default function MainAppView(props) {
+  const {
+    user,
+    onLogout,
+    onNavigateToSettings,
+    onNavigateToProfile,
+    onNavigateToFeed,
+    onNavigateToPopular,
+    onNavigateToTopRated,
+    onNavigateToNewReleases,
 
-    // featured
-    const featuredMovie = movies[0]; // πρώτη ταινία ως featured
+    searchQuery,
+    selectedGenre,
+    onSearch,
+    onGenreChange,
+    genres,
 
-    // @ts-check
+    featuredMovie,
+    popularMovies,
+    topRatedMovies,
+    newReleases,
+    gridMovies,
 
-    /** @typedef {{id:number,title:string,posterUrl:string,rating:number,releaseDate:string,genre:string,overview:string}} Movie */
+    onMovieClick,
+    onRateMovie,
+    getUserRatingForMovie,
+    onToggleFavorite,
+    isMovieFavorite,
+    onToggleWatchlist,
+    isMovieInWatchlist,
 
-    /** @param {Movie} movie */
-    const handleMovieClick = (movie) => {
-        setSelectedMovie(movie);
-        setIsDetailsOpen(true);
-        onMoviePopupChange(true);
-    };
+    selectedMovie,
+    isDetailsOpen,
+    onCloseDetails,
 
-    const handleCloseDetails = () => {
-        setIsDetailsOpen(false);
-        setSelectedMovie(null);
-        onMoviePopupChange(false);
-    };
+    movieComments,
+    onAddComment,
+    currentUserName,
+  } = props;
 
-    /** @param {string} query */
-    const handleSearch = (query) => {
-        setSearchQuery(query);
-        setSelectedGenre("All");
-    };
+  const showLandingSections = !searchQuery && selectedGenre === "All";
 
-    const handleGenreChange = (genre) => {
-      setSelectedGenre(genre);
-      setSearchQuery(""); // reset search όταν αλλάζει το genre
-    };
-
-    // Φιλτράρισμα με βάση search ή genre
-    const filteredMovies = searchQuery
-    ? searchMovies(searchQuery)
-    : getMoviesByGenre(selectedGenre);
-
-    // Αν δείχνουμε "All" και δεν υπάρχει search, βγάλε το featured (πρώτο)
-    const gridMovies =
-    selectedGenre === "All" && !searchQuery
-        ? filteredMovies.slice(1)
-        : filteredMovies;
-
-    return (
-        <div className="min-h-screen bg-background">
-      <Header 
-        onSearch={handleSearch} 
+  return (
+    <div className="min-h-screen bg-background">
+      <Header
+        onSearch={onSearch}
         searchQuery={searchQuery}
         user={user}
         onLogout={onLogout}
@@ -94,11 +65,11 @@ export default function MainApp({
         onNavigateToTopRated={onNavigateToTopRated}
         onNavigateToNewReleases={onNavigateToNewReleases}
       />
-      
-      {!searchQuery && selectedGenre === "All" && (
-        <HeroSectionPage 
-          featuredMovie={featuredMovie} 
-          onMovieClick={handleMovieClick}
+
+      {showLandingSections && featuredMovie && (
+        <HeroSectionPage
+          featuredMovie={featuredMovie}
+          onMovieClick={onMovieClick}
         />
       )}
 
@@ -110,7 +81,7 @@ export default function MainApp({
               key={genre}
               variant={selectedGenre === genre ? "default" : "outline"}
               size="sm"
-              onClick={() => handleGenreChange(genre)}
+              onClick={() => onGenreChange(genre)}
             >
               {genre}
             </Button>
@@ -119,14 +90,14 @@ export default function MainApp({
       </div>
 
       {/* Full-width Movie Sections */}
-      {!searchQuery && selectedGenre === "All" && (
+      {showLandingSections && (
         <div className="w-full space-y-12 pb-8">
           {/* Popular Movies Section */}
           <div className="container px-4">
             <MovieSectionPage
               title="Popular Movies"
-              movies={getPopularMovies()}
-              onMovieClick={handleMovieClick}
+              movies={popularMovies}
+              onMovieClick={onMovieClick}
               onViewAll={onNavigateToPopular}
               onRateMovie={onRateMovie}
               getUserRatingForMovie={getUserRatingForMovie}
@@ -141,8 +112,8 @@ export default function MainApp({
           <div className="container px-4">
             <MovieSectionPage
               title="Top Rated"
-              movies={getTopRatedMovies()}
-              onMovieClick={handleMovieClick}
+              movies={topRatedMovies}
+              onMovieClick={onMovieClick}
               onViewAll={onNavigateToTopRated}
               onRateMovie={onRateMovie}
               getUserRatingForMovie={getUserRatingForMovie}
@@ -157,8 +128,8 @@ export default function MainApp({
           <div className="container px-4">
             <MovieSectionPage
               title="New Releases"
-              movies={getNewReleases()}
-              onMovieClick={handleMovieClick}
+              movies={newReleases}
+              onMovieClick={onMovieClick}
               onViewAll={onNavigateToNewReleases}
               onRateMovie={onRateMovie}
               getUserRatingForMovie={getUserRatingForMovie}
@@ -176,10 +147,10 @@ export default function MainApp({
         <main className="container px-4 py-8">
           <MovieGridPage
             movies={gridMovies}
-            onMovieClick={handleMovieClick}
+            onMovieClick={onMovieClick}
             title={
-              searchQuery 
-                ? `Search results for "${searchQuery}"` 
+              searchQuery
+                ? `Search results for "${searchQuery}"`
                 : `${selectedGenre} Movies`
             }
             onRateMovie={onRateMovie}
@@ -192,34 +163,35 @@ export default function MainApp({
         </main>
       )}
 
+      {/* Movie Details Modal */}
       <MovieDetailsPage
         movie={selectedMovie}
         isOpen={isDetailsOpen}
-        onClose={handleCloseDetails}
+        onClose={onCloseDetails}
         onRateMovie={onRateMovie}
         getUserRatingForMovie={getUserRatingForMovie}
         onToggleFavorite={onToggleFavorite}
         isMovieFavorite={isMovieFavorite}
         movieComments={movieComments}
         onAddComment={onAddComment}
-        currentUserName={user?.name || user?.email?.split('@')[0] || "Anonymous"}
+        currentUserName={currentUserName}
         onToggleWatchlist={onToggleWatchlist}
         isMovieInWatchlist={isMovieInWatchlist}
       />
 
       {/* Footer */}
-      <footer className="mt-16" style={{ backgroundColor: '#383838', paddingTop: '3%', paddingBottom: '3%' }}>
+      <footer
+        className="mt-16"
+        style={{ backgroundColor: "#383838", paddingTop: "3%", paddingBottom: "3%" }}
+      >
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-start">
-            <a 
-              href="#" 
-              className="text-white hover:text-gray-300 transition-colors duration-200"
-            >
+            <a href="#" className="text-white hover:text-gray-300 transition-colors duration-200">
               This project created with ❤ by Skg team B
             </a>
           </div>
         </div>
       </footer>
     </div>
-    );
+  );
 }

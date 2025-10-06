@@ -1,6 +1,6 @@
 import MovieCardPage from "../MovieCard/MovieCardPage.jsx";
 
-/** @typedef {import("../types/movieDisplays/movieGridProps").MovieGridProps} MovieGridProps */
+/** @typedef {import("../../assets/types/movieDisplays/movieGridProps").MovieGridProps} MovieGridProps */
 
 /** @param {MovieGridProps} props */
 export default function MovieGridView({
