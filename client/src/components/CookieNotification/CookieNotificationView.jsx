@@ -2,6 +2,7 @@
 import { X, Cookie } from "lucide-react";
 import { Button } from "../../assets/ui/button";
 import { Card } from "../../assets/ui/card";
+import CookieNotificationStyles from "./CoockieNotification.styles.css"
 
 /** @typedef {import("../../assets/types/pagesProps/CookieNotificationViewProps").CookieNotificationViewProps} CookieNotificationViewProps */
 
