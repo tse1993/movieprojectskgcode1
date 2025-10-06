@@ -4,7 +4,7 @@
 /** @typedef {import("..movieDisplays/MovieComment").MovieComment} MovieComment */
 
 /**
- * @typedef {Object} MainAppProps
+ * @typedef {Object} DashboardProps
  * @property {User|null} user
  * @property {() => void} onLogout
  * @property {() => void} onNavigateToSettings

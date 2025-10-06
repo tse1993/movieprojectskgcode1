@@ -1,5 +1,5 @@
 import { useState } from "react";
-import MainAppView from "./MainAppView.jsx";
+import DashboardView from "./DashboardView.jsx";
 
 import {
   movies,
@@ -12,13 +12,13 @@ import {
 } from "../../data/movies.js";
 
 // @ts-check
-/** @typedef {import("../../assets/types/pagesProps/mainAppProps").MainAppProps} MainAppProps */
+/** @typedef {import("../../assets/types/pagesProps/DashboardProps.js").DashboardProps} DashboardProps */
 
 /**
  * Container: κρατά state/handlers & περνά δεδομένα στο View.
- * @param {MainAppProps} props
+ * @param {DashboardProps} props
  */
-export default function MainApp(props) {
+export default function Dashboard(props) {
   const {
     user,
     onLogout,
@@ -94,7 +94,7 @@ export default function MainApp(props) {
     user?.name || user?.email?.split("@")[0] || "Anonymous";
 
   return (
-    <MainAppView
+    <DashboardView
       /* user + nav */
       user={user}
       onLogout={onLogout}

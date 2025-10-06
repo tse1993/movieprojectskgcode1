@@ -3,13 +3,13 @@ import HeroSectionPage from "../HeroSection/HeroSectionPage.jsx";
 import MovieGridPage from "../MovieGrid/MovieGridPage.jsx";
 import MovieDetailsPage from "../MovieDetails/MovieDetailsPage.jsx";
 import MovieSectionPage from "../MovieSection/MovieSectionPage.jsx";
-import { Button } from "../../assets/ui/button";
+import { Button } from "../../assets/ui/button.jsx";
 
 // @ts-check
-/** @typedef {import("../../assets/types/pagesProps/MainAppViewProps").MainAppViewProps} MainAppViewProps */
+/** @typedef {import("../../assets/types/pagesProps/DashboardViewProps.js").DashboardViewProps} DashboardViewProps */
 
-/** @param {MainAppViewProps} props */
-export default function MainAppView(props) {
+/** @param {DashboardViewProps} props */
+export default function DashboardView(props) {
   const {
     user,
     onLogout,
