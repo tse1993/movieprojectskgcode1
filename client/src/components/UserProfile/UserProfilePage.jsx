@@ -1,11 +1,18 @@
 import { useState } from "react";
-import { movies } from "@/data/movies";
 import UserProfileView from "./UserProfileView.jsx";
+import { api } from "../../services/api.js";
 
 /** @typedef {import("../../assets/types/pagesProps/UserProfilePageProps").UserProfilePageProps} UserProfilePageProps */
 
 /** @param {UserProfilePageProps} props */
 export default function UserProfilePage(props) {
+  console.log('[UserProfilePage] Component rendered with props:', {
+    userEmail: props.user?.email,
+    favoritesCount: props.favoriteMovies?.length,
+    ratingsCount: props.movieRatings?.length,
+    watchlistCount: props.watchlistMovies?.length
+  });
+
   const {
     user,
     onBack,
@@ -16,6 +23,12 @@ export default function UserProfilePage(props) {
     watchlistMovies,
     onClearAllWatchlist,
     onRemoveFromWatchlist,
+    onRateMovie,
+    getUserRatingForMovie,
+    onToggleFavorite,
+    isMovieFavorite,
+    onToggleWatchlist,
+    isMovieInWatchlist,
   } = props;
 
   const [sortBy, setSortBy] = useState("added-desc");
@@ -28,65 +41,147 @@ export default function UserProfilePage(props) {
   const [ratedViewMode, setRatedViewMode] = useState("grid");
   const [showRatedDeleteDialog, setShowRatedDeleteDialog] = useState(false);
 
-  // Favorites (εμπλουτισμένα)
-  const favoriteMoviesList = favoriteMovies
-    .map((favorite) => {
-      const movie = movies.find((m) => String(m.id) === String(favorite.movieId));
-      if (!movie) return null;
-      return {
-        id: movie.id,
-        title: movie.title,
-        year: new Date(movie.releaseDate).getFullYear(),
-        poster: movie.posterUrl,
-        genre: [movie.genre],
-        rating: movie.rating,
-        runtime: 120,
-        director: "Director Name",
-        cast: ["Actor 1", "Actor 2"],
-        addedDate: favorite.addedAt.split("T")[0],
-      };
-    })
-    .filter(Boolean);
+  // Favorites (already enriched from API - using transformed TMDB data)
+  const favoriteMoviesList = favoriteMovies.map((favorite) => {
+    try {
+      console.log('[UserProfilePage] Processing favorite:', { movieId: favorite.movieId, id: favorite.id, title: favorite.title, vote_average: favorite.vote_average });
 
-  // Rated
-  const ratedMovies = movieRatings
-    .map((rating) => {
-      const movie = movies.find((m) => String(m.id) === String(rating.movieId));
-      if (!movie) return null;
+      if (!favorite) {
+        console.error('[UserProfilePage] Favorite is null or undefined');
+        throw new Error('Favorite object is null or undefined');
+      }
+
+      // Use movieId (set by Root.jsx) or fallback to id from API
+      const movieId = favorite.movieId || favorite.id;
+      if (!movieId) {
+        console.error('[UserProfilePage] Favorite missing both movieId and id:', favorite);
+        throw new Error('Favorite missing id field');
+      }
+
       return {
-        id: movie.id,
-        title: movie.title,
-        year: new Date(movie.releaseDate).getFullYear(),
-        poster: movie.posterUrl,
-        genre: [movie.genre],
-        tmdbRating: movie.rating,
-        runtime: 120,
-        director: "Director Name",
-        cast: ["Actor 1", "Actor 2"],
+        id: movieId,
+        title: favorite.title || 'Unknown Title',
+        year: favorite.releaseDate ? new Date(favorite.releaseDate).getFullYear() : 'N/A',
+        poster: favorite.posterUrl || '/placeholder.jpg',
+        genre: favorite.genre ? [favorite.genre] : [],
+        rating: favorite.vote_average || favorite.rating || 0, // Use vote_average from TMDB API
+        runtime: favorite.runtime || 120,
+        director: favorite.crew ? favorite.crew.find(c => c.job === 'Director')?.name || "Unknown" : "Unknown",
+        cast: favorite.cast ? favorite.cast.map(c => c.name) : [],
+        addedDate: favorite.addedAt?.split("T")[0] || new Date().toISOString().split("T")[0],
+        trailerUrl: favorite.trailerUrl, // Pass through trailer URL from API
+      };
+    } catch (error) {
+      console.error('[UserProfilePage] Error processing favorite:', { favorite, error: error.message, stack: error.stack });
+      throw error;
+    }
+  });
+
+  // Rated (already enriched from API - using transformed TMDB data)
+  const ratedMovies = movieRatings.map((rating) => {
+    try {
+      console.log('[UserProfilePage] Processing rating:', { tmdbId: rating.tmdbId, userRating: rating.rating, movieTitle: rating.movie?.title });
+
+      if (!rating) {
+        console.error('[UserProfilePage] Rating is null or undefined');
+        throw new Error('Rating object is null or undefined');
+      }
+
+      if (!rating.tmdbId && !rating.movie?.id) {
+        console.error('[UserProfilePage] Rating missing both tmdbId and movie.id:', rating);
+        throw new Error('Rating missing id fields');
+      }
+
+      return {
+        id: rating.movie?.id || rating.tmdbId,
+        title: rating.movie?.title || 'Unknown Movie',
+        year: rating.movie?.releaseDate ? new Date(rating.movie.releaseDate).getFullYear() : 'N/A',
+        poster: rating.movie?.posterUrl || '/placeholder.jpg',
+        genre: rating.movie?.genre ? [rating.movie.genre] : [],
+        tmdbRating: rating.movie?.vote_average || rating.movie?.rating || 0, // Fix: use vote_average
+        runtime: rating.movie?.runtime || 120,
+        director: rating.movie?.crew ? rating.movie.crew.find(c => c.job === 'Director')?.name || "Unknown" : "Unknown",
+        cast: rating.movie?.cast ? rating.movie.cast.map(c => c.name) : [],
         userRating: rating.rating,
-        ratedDate: rating.ratedAt.split("T")[0],
+        ratedDate: rating.ratedAt?.split("T")[0] || new Date().toISOString().split("T")[0],
+        trailerUrl: rating.movie?.trailerUrl, // Pass through trailer URL
       };
-    })
-    .filter(Boolean);
+    } catch (error) {
+      console.error('[UserProfilePage] Error processing rating:', { rating, error: error.message, stack: error.stack });
+      throw error;
+    }
+  });
 
-  // Watchlist
+  // Watchlist (already enriched from API - using transformed TMDB data)
   const watchlistMoviesWithDetails = watchlistMovies
     .map((item) => {
-      const movie = movies.find((m) => String(m.id) === String(item.movieId));
-      return movie ? { ...movie, addedAt: item.addedAt } : null;
+      try {
+        console.log('[UserProfilePage] Processing watchlist item:', { movieId: item.movieId, id: item.id, title: item.title, posterUrl: item.posterUrl, poster_path: item.poster_path });
+
+        if (!item) {
+          console.error('[UserProfilePage] Watchlist item is null or undefined');
+          throw new Error('Watchlist item is null or undefined');
+        }
+
+        // Use movieId (set by Root.jsx) or fallback to id from API
+        const movieId = item.movieId || item.id;
+        if (!movieId) {
+          console.error('[UserProfilePage] Watchlist item missing both movieId and id:', item);
+          throw new Error('Watchlist item missing id field');
+        }
+
+        return {
+          id: movieId,
+          title: item.title || 'Unknown Title',
+          posterUrl: item.posterUrl || (item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : '/placeholder.jpg'), // Fix poster URL with proper fallback
+          rating: item.vote_average || item.rating || 0, // Use vote_average from TMDB API
+          releaseDate: item.releaseDate || item.release_date,
+          genre: item.genre || 'Unknown',
+          overview: item.overview || 'No overview available',
+          addedAt: item.addedAt,
+          trailerUrl: item.trailerUrl, // Pass through trailer URL
+        };
+      } catch (error) {
+        console.error('[UserProfilePage] Error processing watchlist item:', { item, error: error.message, stack: error.stack });
+        throw error;
+      }
     })
-    .filter(Boolean)
     .sort((a, b) => {
-      const ta = a?.addedAt ? new Date(a.addedAt).getTime() : 0;
-      const tb = b?.addedAt ? new Date(b.addedAt).getTime() : 0;
-      return tb - ta;
+      try {
+        const ta = a?.addedAt ? new Date(a.addedAt).getTime() : 0;
+        const tb = b?.addedAt ? new Date(b.addedAt).getTime() : 0;
+        return tb - ta;
+      } catch (error) {
+        console.error('[UserProfilePage] Error sorting watchlist:', { error: error.message, a, b });
+        return 0;
+      }
     });
+
+  // Format member since date from user.createdAt
+  const formatMemberSince = () => {
+    if (!user?.createdAt) {
+      console.warn('[UserProfilePage] User createdAt not available');
+      return 'Unknown';
+    }
+
+    try {
+      const date = new Date(user.createdAt);
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      });
+    } catch (error) {
+      console.error('[UserProfilePage] Error formatting member since date:', error);
+      return 'Unknown';
+    }
+  };
 
   const userStats = {
     moviesRated: ratedMovies.length,
     favorites: favoriteMoviesList.length,
     watchlistItems: watchlistMoviesWithDetails.length,
-    memberSince: "January 2024",
+    memberSince: formatMemberSince(),
   };
 
   const formatDate = (dateString) => {
@@ -105,10 +200,14 @@ export default function UserProfilePage(props) {
   };
 
   const handleClearAllFavorites = () => {
+    console.log('[UserProfilePage] handleClearAllFavorites called');
     onClearAllFavorites();
     setShowDeleteDialog(false);
   };
-  const handleDeleteClick = () => setShowDeleteDialog(true);
+  const handleDeleteClick = () => {
+    console.log('[UserProfilePage] handleDeleteClick called');
+    setShowDeleteDialog(true);
+  };
 
   const getRatingColor = (rating) => {
     if (rating >= 8) return "text-green-600";
@@ -123,12 +222,17 @@ export default function UserProfilePage(props) {
   };
 
   const handleClearAllRatings = () => {
+    console.log('[UserProfilePage] handleClearAllRatings called');
     onClearAllRatings();
     setShowRatedDeleteDialog(false);
   };
-  const handleRatedDeleteClick = () => setShowRatedDeleteDialog(true);
+  const handleRatedDeleteClick = () => {
+    console.log('[UserProfilePage] handleRatedDeleteClick called');
+    setShowRatedDeleteDialog(true);
+  };
 
   const handleRemoveFromWatchlist = (movieId) => {
+    console.log('[UserProfilePage] handleRemoveFromWatchlist called:', { movieId });
     onRemoveFromWatchlist(movieId);
   };
 
@@ -167,39 +271,64 @@ export default function UserProfilePage(props) {
   });
 
   // Filter/sort rated
-  let filteredRatedMovies = [...ratedMovies];
-  if (filterRating !== "all") {
-    const minRating = parseInt(filterRating, 10);
-    filteredRatedMovies = filteredRatedMovies.filter(
-      (m) => m.userRating >= minRating && m.userRating < minRating + 2
-    );
-  }
-  filteredRatedMovies = [...filteredRatedMovies].sort((a, b) => {
-    switch (ratedSortBy) {
-      case "rated-desc":
-        return new Date(b.ratedDate).getTime() - new Date(a.ratedDate).getTime();
-      case "rated-asc":
-        return new Date(a.ratedDate).getTime() - new Date(b.ratedDate).getTime();
-      case "user-rating-desc":
-        return b.userRating - a.userRating;
-      case "user-rating-asc":
-        return a.userRating - b.userRating;
-      case "tmdb-rating-desc":
-        return b.tmdbRating - a.tmdbRating;
-      case "tmdb-rating-asc":
-        return a.tmdbRating - b.tmdbRating;
-      case "title-asc":
-        return a.title.localeCompare(b.title);
-      case "title-desc":
-        return b.title.localeCompare(a.title);
-      case "year-desc":
-        return b.year - a.year;
-      case "year-asc":
-        return a.year - b.year;
-      default:
-        return 0;
+  let filteredRatedMovies = [];
+  try {
+    console.log('[UserProfilePage] Filtering rated movies:', { filterRating, totalMovies: ratedMovies.length });
+    filteredRatedMovies = [...ratedMovies];
+
+    if (filterRating !== "all") {
+      const minRating = parseInt(filterRating, 10);
+      console.log('[UserProfilePage] Applying rating filter:', { minRating, maxRating: minRating + 2 });
+
+      if (isNaN(minRating)) {
+        console.error('[UserProfilePage] Invalid filter rating:', filterRating);
+        throw new Error(`Invalid filter rating: ${filterRating}`);
+      }
+
+      filteredRatedMovies = filteredRatedMovies.filter((m) => {
+        const matches = m.userRating >= minRating && m.userRating < minRating + 2;
+        console.log('[UserProfilePage] Rating filter check:', { title: m.title, userRating: m.userRating, minRating, matches });
+        return matches;
+      });
+
+      console.log('[UserProfilePage] Filtered results count:', filteredRatedMovies.length);
     }
-  });
+
+    filteredRatedMovies = [...filteredRatedMovies].sort((a, b) => {
+      try {
+        switch (ratedSortBy) {
+          case "rated-desc":
+            return new Date(b.ratedDate).getTime() - new Date(a.ratedDate).getTime();
+          case "rated-asc":
+            return new Date(a.ratedDate).getTime() - new Date(b.ratedDate).getTime();
+          case "user-rating-desc":
+            return (b.userRating || 0) - (a.userRating || 0);
+          case "user-rating-asc":
+            return (a.userRating || 0) - (b.userRating || 0);
+          case "tmdb-rating-desc":
+            return (b.tmdbRating || 0) - (a.tmdbRating || 0);
+          case "tmdb-rating-asc":
+            return (a.tmdbRating || 0) - (b.tmdbRating || 0);
+          case "title-asc":
+            return (a.title || '').localeCompare(b.title || '');
+          case "title-desc":
+            return (b.title || '').localeCompare(a.title || '');
+          case "year-desc":
+            return (b.year === 'N/A' ? 0 : b.year) - (a.year === 'N/A' ? 0 : a.year);
+          case "year-asc":
+            return (a.year === 'N/A' ? 0 : a.year) - (b.year === 'N/A' ? 0 : b.year);
+          default:
+            return 0;
+        }
+      } catch (error) {
+        console.error('[UserProfilePage] Error sorting rated movies:', { a, b, sortBy: ratedSortBy, error });
+        return 0;
+      }
+    });
+  } catch (error) {
+    console.error('[UserProfilePage] Error filtering/sorting rated movies:', error);
+    filteredRatedMovies = [...ratedMovies]; // Fallback to unfiltered
+  }
 
   const ratingDistribution = Array.from({ length: 10 }, (_, i) => i + 1).map(
     (rating) => ({
@@ -208,46 +337,54 @@ export default function UserProfilePage(props) {
     })
   );
 
+  // Movie click handler - fetch full details and show modal
+
+  const currentUserName = user?.name || user?.email?.split("@")[0] || "Anonymous";
+  console.log('[UserProfilePage] Current user name:', currentUserName);
+
   return (
-    <UserProfileView
-      user={user}
-      onBack={onBack}
-      userStats={userStats}
-      // favorites
-      allGenres={allGenres}
-      filteredMovies={filteredMovies}
-      viewMode={viewMode}
-      setViewMode={setViewMode}
-      sortBy={sortBy}
-      setSortBy={setSortBy}
-      filterGenre={filterGenre}
-      setFilterGenre={setFilterGenre}
-      showDeleteDialog={showDeleteDialog}
-      setShowDeleteDialog={setShowDeleteDialog}
-      handleDeleteClick={handleDeleteClick}
-      handleClearAllFavorites={handleClearAllFavorites}
-      // rated
-      filteredRatedMovies={filteredRatedMovies}
-      ratedViewMode={ratedViewMode}
-      setRatedViewMode={setRatedViewMode}
-      ratedSortBy={ratedSortBy}
-      setRatedSortBy={setRatedSortBy}
-      filterRating={filterRating}
-      setFilterRating={setFilterRating}
-      showRatedDeleteDialog={showRatedDeleteDialog}
-      setShowRatedDeleteDialog={setShowRatedDeleteDialog}
-      handleRatedDeleteClick={handleRatedDeleteClick}
-      handleClearAllRatings={handleClearAllRatings}
-      ratingDistribution={ratingDistribution}
-      getRatingBadgeVariant={getRatingBadgeVariant}
-      getRatingColor={getRatingColor}
-      // watchlist
-      watchlistMoviesWithDetails={watchlistMoviesWithDetails}
-      handleRemoveFromWatchlist={handleRemoveFromWatchlist}
-      onClearAllWatchlist={onClearAllWatchlist}
-      // utils
-      formatDate={formatDate}
-      formatRuntime={formatRuntime}
-    />
+    <>
+      <UserProfileView
+        user={user}
+        onBack={onBack}
+        userStats={userStats}
+        // favorites
+        allGenres={allGenres}
+        filteredMovies={filteredMovies}
+        viewMode={viewMode}
+        setViewMode={setViewMode}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        filterGenre={filterGenre}
+        setFilterGenre={setFilterGenre}
+        showDeleteDialog={showDeleteDialog}
+        setShowDeleteDialog={setShowDeleteDialog}
+        handleDeleteClick={handleDeleteClick}
+        handleClearAllFavorites={handleClearAllFavorites}
+        // rated
+        totalRatedMovies={ratedMovies.length}  // Total unfiltered count
+        filteredRatedMovies={filteredRatedMovies}
+        ratedViewMode={ratedViewMode}
+        setRatedViewMode={setRatedViewMode}
+        ratedSortBy={ratedSortBy}
+        setRatedSortBy={setRatedSortBy}
+        filterRating={filterRating}
+        setFilterRating={setFilterRating}
+        showRatedDeleteDialog={showRatedDeleteDialog}
+        setShowRatedDeleteDialog={setShowRatedDeleteDialog}
+        handleRatedDeleteClick={handleRatedDeleteClick}
+        handleClearAllRatings={handleClearAllRatings}
+        ratingDistribution={ratingDistribution}
+        getRatingBadgeVariant={getRatingBadgeVariant}
+        getRatingColor={getRatingColor}
+        // watchlist
+        watchlistMoviesWithDetails={watchlistMoviesWithDetails}
+        handleRemoveFromWatchlist={handleRemoveFromWatchlist}
+        onClearAllWatchlist={onClearAllWatchlist}
+        // utils
+        formatDate={formatDate}
+        formatRuntime={formatRuntime}
+      />
+    </>
   );
 }

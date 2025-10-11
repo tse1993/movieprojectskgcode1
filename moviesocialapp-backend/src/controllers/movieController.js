@@ -52,6 +52,29 @@ class MovieController {
     }
   }
 
+  async getMoviesByGenre(req, res) {
+    try {
+      const { genre } = req.params;
+      const { page = 1 } = req.query;
+
+      if (!genre) {
+        return res.status(400).json({ message: 'Genre is required' });
+      }
+
+      const data = await tmdbApi.getMoviesByGenre(genre, page);
+      res.json(data);
+    } catch (error) {
+      console.error('Movies by genre error:', error);
+
+      // If invalid genre name
+      if (error.message.includes('Invalid genre')) {
+        return res.status(400).json({ message: error.message });
+      }
+
+      res.status(500).json({ message: 'Error fetching movies by genre' });
+    }
+  }
+
   async getMovieDetails(req, res) {
     try {
       const { id } = req.params;

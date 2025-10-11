@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, User, Lock, Save } from "lucide-react";
 import { Button } from "../../assets/ui/button";
 import { Input } from "../../assets/ui/input";
@@ -6,6 +6,7 @@ import { Label } from "../../assets/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../assets/ui/card";
 import { Separator } from "../../assets/ui//separator";
 import { toast } from "sonner";
+import { api } from "../../services/api";
 
 /** @typedef {import("../../assets/types/pagesProps/settingsPageProps").SettingsPageProps} SettingsPageProps */
 
@@ -17,40 +18,105 @@ export default function SettingsView({ user, onUpdateUser, onBack }) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [profileError, setProfileError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
-  const handleUpdateProfile = (e) => {
+  // Log component mount only once
+  useEffect(() => {
+    console.log('[SettingsView] Component mounted with props:', { 
+      user: user ? { id: user._id, name: user.name, email: user.email } : null,
+      hasOnUpdateUser: typeof onUpdateUser === 'function',
+      hasOnBack: typeof onBack === 'function'
+    });
+    console.log('[SettingsView] Initial state set:', {
+      username,
+      hasCurrentPassword: !!currentPassword,
+      hasNewPassword: !!newPassword,
+      hasConfirmPassword: !!confirmPassword
+    });
+  }, []); // Empty dependency array means this runs only once on mount
+
+  const handleUpdateProfile = async (e) => {
     e.preventDefault();
+    console.log('[SettingsView] handleUpdateProfile called', { username, currentUser: user });
     setIsUpdatingProfile(true);
+    setProfileError(""); // Clear any previous errors
 
-    setTimeout(() => {
-      onUpdateUser({ ...user, name: username });
-      setIsUpdatingProfile(false);
+    try {
+      console.log('[SettingsView] Calling api.updateProfile with username:', username);
+      const response = await api.updateProfile(username);
+      console.log('[SettingsView] api.updateProfile successful:', response);
+      
+      onUpdateUser(response.user);
+      console.log('[SettingsView] User updated successfully, calling onUpdateUser with:', response.user);
       toast.success("Information updated successfully!");
-    }, 1000);
+    } catch (error) {
+      console.error('[SettingsView] Failed to update profile:', {
+        error: error.message,
+        status: error.status,
+        response: error.response,
+        username: username
+      });
+      setProfileError(error.message || "Failed to update profile. Please try again.");
+      toast.error(error.message || "Failed to update profile. Please try again.");
+    } finally {
+      setIsUpdatingProfile(false);
+      console.log('[SettingsView] Profile update process completed');
+    }
   };
 
-  const handleUpdatePassword = (e) => {
+  const handleUpdatePassword = async (e) => {
     e.preventDefault();
+    console.log('[SettingsView] handleUpdatePassword called', {
+      hasCurrentPassword: !!currentPassword,
+      hasNewPassword: !!newPassword,
+      hasConfirmPassword: !!confirmPassword,
+      newPasswordLength: newPassword.length
+    });
+
+    setPasswordError(""); // Clear any previous errors
 
     if (newPassword !== confirmPassword) {
+      console.error('[SettingsView] Password validation failed: passwords do not match');
+      setPasswordError("New passwords don't match!");
       toast.error("New passwords don't match!");
       return;
     }
 
     if (newPassword.length < 6) {
+      console.error('[SettingsView] Password validation failed: password too short', { length: newPassword.length });
+      setPasswordError("Password must be at least 6 characters long!");
       toast.error("Password must be at least 6 characters long!");
       return;
     }
 
     setIsUpdatingPassword(true);
+    console.log('[SettingsView] Starting password change process...');
 
-    setTimeout(() => {
+    try {
+      console.log('[SettingsView] Calling api.changePassword...');
+      const response = await api.changePassword(currentPassword, newPassword);
+      console.log('[SettingsView] api.changePassword successful:', response);
+      
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      setIsUpdatingPassword(false);
+      console.log('[SettingsView] Password form fields cleared');
       toast.success("Password updated successfully!");
-    }, 1000);
+    } catch (error) {
+      console.error('[SettingsView] Failed to change password:', {
+        error: error.message,
+        status: error.status,
+        response: error.response,
+        hasCurrentPassword: !!currentPassword,
+        newPasswordLength: newPassword.length
+      });
+      setPasswordError(error.message || "Failed to change password. Please check your current password and try again.");
+      toast.error(error.message || "Failed to change password. Please check your current password and try again.");
+    } finally {
+      setIsUpdatingPassword(false);
+      console.log('[SettingsView] Password change process completed');
+    }
   };
 
   return (
@@ -90,6 +156,11 @@ export default function SettingsView({ user, onUpdateUser, onBack }) {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleUpdateProfile} className="space-y-4">
+                {profileError && (
+                  <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+                    {profileError}
+                  </div>
+                )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email Address</Label>
@@ -146,6 +217,11 @@ export default function SettingsView({ user, onUpdateUser, onBack }) {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleUpdatePassword} className="space-y-4">
+                {passwordError && (
+                  <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+                    {passwordError}
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="current-password">Current Password</Label>
                   <Input

@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "../../assets/ui/button";
-import { getPopularMovies } from "@/data/movies";
+import { api } from "../../services/api.js";
 import MovieGridPage from "../MovieGrid/MovieGridPage";
 import MovieDetailsPage from "../MovieDetails/MovieDetailsPage";
 
@@ -26,20 +26,60 @@ export default function PopularMoviesView(props) {
 
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [popularMovies, setPopularMovies] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-  const popularMovies = getPopularMovies();
+  useEffect(() => {
+    const loadMovies = async (page = 1) => {
+      console.log('[PopularMoviesView] loadMovies called:', { page });
+      try {
+        setLoading(true);
+        const data = await api.getPopularMovies(page);
+        console.log('[PopularMoviesView] Popular movies loaded successfully:', {
+          count: data.results?.length,
+          page: data.page,
+          totalPages: data.total_pages
+        });
+        setPopularMovies(data.results || []);
+        setCurrentPage(data.page);
+        setTotalPages(data.total_pages);
+      } catch (error) {
+        console.error('[PopularMoviesView] Failed to load popular movies:', error);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMovies(currentPage);
+  }, [currentPage]);
 
   const handleMovieClick = (movie) => {
+    console.log('[PopularMoviesView] handleMovieClick called:', { movieId: movie.id, title: movie.title });
     setSelectedMovie(movie);
     setIsDetailsOpen(true);
     onMoviePopupChange?.(true);
   };
 
   const handleCloseDetails = () => {
+    console.log('[PopularMoviesView] handleCloseDetails called');
     setIsDetailsOpen(false);
     setSelectedMovie(null);
     onMoviePopupChange?.(false);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading popular movies...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -58,11 +98,11 @@ export default function PopularMoviesView(props) {
       <main className="container px-4 py-8">
         <div className="mb-6">
           <p className="text-muted-foreground">
-            Discover the most popular movies on our platform. These are the
-            highest-rated films that our community loves.
+            Discover the most popular movies on TMDB. These are the
+            highest-rated films that the community loves.
           </p>
           <p className="text-sm text-muted-foreground mt-2">
-            Showing {popularMovies.length} popular movies
+            Showing {popularMovies.length} movies (Page {currentPage} of {totalPages})
           </p>
         </div>
 
@@ -76,6 +116,27 @@ export default function PopularMoviesView(props) {
           onToggleWatchlist={onToggleWatchlist}
           isMovieInWatchlist={isMovieInWatchlist}
         />
+
+        {/* Pagination Controls */}
+        <div className="flex items-center justify-center gap-4 mt-8 pb-8">
+          <Button
+            variant="outline"
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            disabled={currentPage === 1 || loading}
+          >
+            Previous
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+            disabled={currentPage === totalPages || loading}
+          >
+            Next
+          </Button>
+        </div>
       </main>
 
       {/* Movie Details Modal */}

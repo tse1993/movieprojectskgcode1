@@ -42,6 +42,7 @@ export default function DashboardView(props) {
 
     selectedMovie,
     isDetailsOpen,
+    isLoadingDetails,
     onCloseDetails,
 
     movieComments,
@@ -167,6 +168,7 @@ export default function DashboardView(props) {
       <MovieDetailsPage
         movie={selectedMovie}
         isOpen={isDetailsOpen}
+        isLoadingDetails={isLoadingDetails}
         onClose={onCloseDetails}
         onRateMovie={onRateMovie}
         getUserRatingForMovie={getUserRatingForMovie}

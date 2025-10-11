@@ -8,5 +8,6 @@ import MovieDetailsView from "./MovieDetailsView.jsx";
  * @param {movieDetailsProps} props
  */
 export default function MovieDetailsPage(props) {
+  // Pass through all props including isLoadingDetails
   return <MovieDetailsView {...props} />;
 }

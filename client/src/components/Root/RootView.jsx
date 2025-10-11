@@ -42,10 +42,13 @@ export default function AppView(props) {
     isMovieInWatchlist,
 
     movieComments,
+    onLoadComments,
     onAddComment,
 
     isMoviePopupOpen,
     onMoviePopupChange,
+
+    createMovieHandlers,
   } = props;
 
   // Αν ο χρήστης δεν έχει μπει
@@ -78,9 +81,11 @@ export default function AppView(props) {
           isMovieFavorite={isMovieFavorite}
           onMoviePopupChange={onMoviePopupChange}
           movieComments={movieComments}
+          onLoadComments={onLoadComments}
           onAddComment={onAddComment}
           onToggleWatchlist={onToggleWatchlist}
           isMovieInWatchlist={isMovieInWatchlist}
+          createMovieHandlers={createMovieHandlers}
         />
       );
       break;
@@ -107,12 +112,39 @@ export default function AppView(props) {
           watchlistMovies={watchlistMovies}
           onClearAllWatchlist={onClearAllWatchlist}
           onRemoveFromWatchlist={onRemoveFromWatchlist}
+          onRateMovie={onRateMovie}
+          getUserRatingForMovie={getUserRatingForMovie}
+          onToggleFavorite={onToggleFavorite}
+          isMovieFavorite={isMovieFavorite}
+          onToggleWatchlist={onToggleWatchlist}
+          isMovieInWatchlist={isMovieInWatchlist}
+          onMoviePopupChange={onMoviePopupChange}
+          movieComments={movieComments}
+          onLoadComments={onLoadComments}
+          onAddComment={onAddComment}
+          createMovieHandlers={createMovieHandlers}
         />
       );
       break;
 
     case "feed":
-      view = <FeedPage user={user} onBack={onNavigateToMain} />;
+      view = (
+        <FeedPage
+          user={user}
+          onBack={onNavigateToMain}
+          onRateMovie={onRateMovie}
+          getUserRatingForMovie={getUserRatingForMovie}
+          onToggleFavorite={onToggleFavorite}
+          isMovieFavorite={isMovieFavorite}
+          onMoviePopupChange={onMoviePopupChange}
+          movieComments={movieComments}
+          onLoadComments={onLoadComments}
+          onAddComment={onAddComment}
+          onToggleWatchlist={onToggleWatchlist}
+          isMovieInWatchlist={isMovieInWatchlist}
+          createMovieHandlers={createMovieHandlers}
+        />
+      );
       break;
 
     case "popular":
@@ -129,6 +161,7 @@ export default function AppView(props) {
           onAddComment={onAddComment}
           onToggleWatchlist={onToggleWatchlist}
           isMovieInWatchlist={isMovieInWatchlist}
+          createMovieHandlers={createMovieHandlers}
         />
       );
       break;
@@ -147,6 +180,7 @@ export default function AppView(props) {
           onAddComment={onAddComment}
           onToggleWatchlist={onToggleWatchlist}
           isMovieInWatchlist={isMovieInWatchlist}
+          createMovieHandlers={createMovieHandlers}
         />
       );
       break;
@@ -166,6 +200,7 @@ export default function AppView(props) {
           onAddComment={onAddComment}
           onToggleWatchlist={onToggleWatchlist}
           isMovieInWatchlist={isMovieInWatchlist}
+          createMovieHandlers={createMovieHandlers}
         />
       );
       break;

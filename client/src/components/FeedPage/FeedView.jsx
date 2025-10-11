@@ -8,7 +8,13 @@ import { Badge } from "../../assets/ui/badge";
 /** @typedef {import("../../assets/types/pagesProps/FeedViewProps").FeedViewProps} FeedViewProps */
 
 /** @param {FeedViewProps} props */
-export default function FeedView({ user, onBack, comments, formatDate }) {
+export default function FeedView({ user, onBack, activities, formatDate, onLoadMore, hasMore, loadingMore, onMovieClick }) {
+  console.log('[FeedView] Rendering with activities:', {
+    count: activities.length,
+    firstActivity: activities[0],
+    firstPoster: activities[0]?.moviePoster
+  });
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -42,59 +48,67 @@ export default function FeedView({ user, onBack, comments, formatDate }) {
               <CardTitle>Review Activity</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {comments.map((comment, index) => (
-                <div key={comment.id}>
+              {activities.map((activity, index) => (
+                <div key={activity._id || index}>
                   <div className="flex space-x-4">
                     {/* Movie Poster */}
-                    <div className="flex-shrink-0">
-                      <img
-                        src={comment.moviePoster}
-                        alt={comment.movieTitle}
-                        className="w-16 h-24 object-cover rounded-md"
-                      />
+                    <div
+                      className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => onMovieClick && onMovieClick(activity.tmdbId, activity.movieTitle)}
+                    >
+                      {activity.moviePoster ? (
+                        <img
+                          src={activity.moviePoster}
+                          alt={activity.movieTitle || 'Movie poster'}
+                          className="w-16 h-24 object-cover rounded-md"
+                        />
+                      ) : (
+                        <div className="w-16 h-24 bg-muted rounded-md flex items-center justify-center">
+                          <Film className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                      )}
                     </div>
 
                     {/* Comment Content */}
                     <div className="flex-1 space-y-3">
-                      {/* Movie Info */}
-                      <div className="flex items-center space-x-2">
-                        <Film className="h-4 w-4 text-muted-foreground" />
-                        <h3 className="font-semibold">{comment.movieTitle}</h3>
-                        <span className="text-muted-foreground">
-                          ({comment.movieYear})
-                        </span>
-                        {comment.rating && (
-                          <Badge variant="secondary" className="ml-auto">
-                            <Star className="h-3 w-3 mr-1 fill-yellow-400 text-yellow-400" />
-                            {comment.rating}/10
-                          </Badge>
-                        )}
+                      {/* User & Movie Info */}
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-medium text-sm">{activity.userName || 'Anonymous'}</span>
+                          <span className="text-muted-foreground text-sm">commented on</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Film className="h-4 w-4 text-muted-foreground" />
+                          <h3
+                            className="font-semibold cursor-pointer hover:text-primary transition-colors"
+                            onClick={() => onMovieClick && onMovieClick(activity.tmdbId, activity.movieTitle)}
+                          >
+                            {activity.movieTitle || 'Unknown Movie'}
+                          </h3>
+                          {activity.movieYear && (
+                            <span className="text-muted-foreground">
+                              ({activity.movieYear})
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       {/* Comment Text */}
                       <p className="text-muted-foreground leading-relaxed">
-                        {comment.commentText}
+                        {activity.content || ''}
                       </p>
 
                       {/* Comment Meta */}
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <div className="flex items-center space-x-4">
-                          <div className="flex items-center space-x-1">
-                            <Calendar className="h-3 w-3" />
-                            <span>{formatDate(comment.date)}</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <div className="h-3 w-3 rounded-full bg-red-500 flex items-center justify-center">
-                              <span className="text-white text-xs">♥</span>
-                            </div>
-                            <span>{comment.likes} likes</span>
-                          </div>
+                        <div className="flex items-center space-x-1">
+                          <Calendar className="h-3 w-3" />
+                          <span>{formatDate(activity.createdAt)}</span>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {index < comments.length - 1 && (
+                  {index < activities.length - 1 && (
                     <Separator className="mt-6" />
                   )}
                 </div>
@@ -102,14 +116,35 @@ export default function FeedView({ user, onBack, comments, formatDate }) {
             </CardContent>
           </Card>
 
+          {/* Load More Button */}
+          {activities.length > 0 && hasMore && (
+            <div className="flex justify-center">
+              <Button
+                variant="outline"
+                onClick={onLoadMore}
+                disabled={loadingMore}
+                className="min-w-[200px]"
+              >
+                {loadingMore ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
+                    Loading...
+                  </>
+                ) : (
+                  'Load More'
+                )}
+              </Button>
+            </div>
+          )}
+
           {/* Empty State */}
-          {comments.length === 0 && (
+          {activities.length === 0 && (
             <Card>
               <CardContent className="py-12 text-center">
                 <MessageCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No reviews yet</h3>
+                <h3 className="text-lg font-semibold mb-2">No comments yet</h3>
                 <p className="text-muted-foreground mb-4">
-                  Start reviewing movies to see your activity here!
+                  Start commenting on movies to see activity here!
                 </p>
                 <Button onClick={onBack}>Browse Movies</Button>
               </CardContent>

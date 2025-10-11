@@ -9,7 +9,7 @@ export default function HeroSectionView({ featuredMovie, onMovieClick }) {
     <section
       className="relative h-[70vh] min-h-[500px] flex items-center justify-center overflow-hidden"
       style={{
-        backgroundImage: `linear-gradient(rgba(0,0,0,.4), rgba(0,0,0,.6)), url(${featuredMovie.posterUrl})`,
+        backgroundImage: `linear-gradient(rgba(0,0,0,.4), rgba(0,0,0,.6)), url(${featuredMovie.backdropUrl || featuredMovie.posterUrl})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}
@@ -39,16 +39,36 @@ export default function HeroSectionView({ featuredMovie, onMovieClick }) {
         </p>
 
         <div className="flex items-center justify-center space-x-4">
-          <Button size="lg" className="flex items-center space-x-2">
-            <Play className="h-5 w-5" />
-            <span>Watch Trailer</span>
-          </Button>
+          {featuredMovie.trailerUrl && (
+            <Button
+              size="lg"
+              className="flex items-center space-x-2"
+              onClick={() => {
+                console.log('[HeroSectionView] Watch Trailer clicked:', { title: featuredMovie.title, trailerUrl: featuredMovie.trailerUrl });
+                try {
+                  window.open(featuredMovie.trailerUrl, '_blank');
+                } catch (error) {
+                  console.error('[HeroSectionView] Failed to open trailer:', error);
+                }
+              }}
+            >
+              <Play className="h-5 w-5" />
+              <span>Watch Trailer</span>
+            </Button>
+          )}
 
           <Button
             size="lg"
             variant="outline"
             className="flex items-center space-x-2 bg-white/10 border-white/20 text-white hover:bg-white/20"
-            onClick={() => onMovieClick(featuredMovie)}
+            onClick={() => {
+              console.log('[HeroSectionView] More Info clicked:', { movieId: featuredMovie.id, title: featuredMovie.title });
+              try {
+                onMovieClick(featuredMovie);
+              } catch (error) {
+                console.error('[HeroSectionView] Failed to open movie details:', error);
+              }
+            }}
           >
             <Info className="h-5 w-5" />
             <span>More Info</span>

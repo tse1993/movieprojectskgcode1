@@ -18,6 +18,8 @@ export default function LoginView({
   onLoginSubmit,
   onRegisterSubmit,
   features,
+  error,
+  isLoading,
 }) {
   const iconMap = { Film, Star, Users, Bookmark };
 
@@ -96,6 +98,11 @@ export default function LoginView({
 
                 {/* Login */}
                 <TabsContent value="login" className="space-y-4 mt-6">
+                  {error && (
+                    <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+                      {error}
+                    </div>
+                  )}
                   <form onSubmit={onLoginSubmit} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="login-email">Email</Label>
@@ -108,6 +115,7 @@ export default function LoginView({
                           setLoginForm((prev) => ({ ...prev, email: e.target.value }))
                         }
                         required
+                        disabled={isLoading}
                       />
                     </div>
                     <div className="space-y-2">
@@ -122,6 +130,7 @@ export default function LoginView({
                             setLoginForm((prev) => ({ ...prev, password: e.target.value }))
                           }
                           required
+                          disabled={isLoading}
                         />
                         <Button
                           type="button"
@@ -129,6 +138,7 @@ export default function LoginView({
                           size="sm"
                           className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                           onClick={onToggleShowPassword}
+                          disabled={isLoading}
                         >
                           {showPassword ? (
                             <EyeOff className="h-4 w-4" />
@@ -138,8 +148,8 @@ export default function LoginView({
                         </Button>
                       </div>
                     </div>
-                    <Button type="submit" className="w-full">
-                      Sign In
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? "Signing In..." : "Sign In"}
                     </Button>
                   </form>
                   <div className="text-center">
@@ -151,6 +161,11 @@ export default function LoginView({
 
                 {/* Register */}
                 <TabsContent value="register" className="space-y-4 mt-6">
+                  {error && (
+                    <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+                      {error}
+                    </div>
+                  )}
                   <form onSubmit={onRegisterSubmit} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="register-name">Full Name</Label>
@@ -163,6 +178,7 @@ export default function LoginView({
                           setRegisterForm((prev) => ({ ...prev, name: e.target.value }))
                         }
                         required
+                        disabled={isLoading}
                       />
                     </div>
                     <div className="space-y-2">
@@ -176,6 +192,7 @@ export default function LoginView({
                           setRegisterForm((prev) => ({ ...prev, email: e.target.value }))
                         }
                         required
+                        disabled={isLoading}
                       />
                     </div>
                     <div className="space-y-2">
@@ -183,12 +200,14 @@ export default function LoginView({
                       <Input
                         id="register-password"
                         type="password"
-                        placeholder="Create a password"
+                        placeholder="Create a password (min 6 characters)"
                         value={registerForm.password}
                         onChange={(e) =>
                           setRegisterForm((prev) => ({ ...prev, password: e.target.value }))
                         }
                         required
+                        disabled={isLoading}
+                        minLength={6}
                       />
                     </div>
                     <div className="space-y-2">
@@ -205,10 +224,11 @@ export default function LoginView({
                           }))
                         }
                         required
+                        disabled={isLoading}
                       />
                     </div>
-                    <Button type="submit" className="w-full">
-                      Create Account
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? "Creating Account..." : "Create Account"}
                     </Button>
                   </form>
                   <p className="text-xs text-center text-muted-foreground">

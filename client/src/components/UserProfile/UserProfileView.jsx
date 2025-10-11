@@ -30,6 +30,7 @@ export default function UserProfileView(props) {
     showDeleteDialog, setShowDeleteDialog,
     handleDeleteClick, handleClearAllFavorites,
 
+    totalRatedMovies, // Total unfiltered count
     filteredRatedMovies,
     ratedViewMode, setRatedViewMode,
     ratedSortBy, setRatedSortBy,
@@ -263,7 +264,10 @@ export default function UserProfileView(props) {
                   ) : viewMode === "grid" ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                       {filteredMovies.map((movie) => (
-                        <Card key={movie.id} className="group cursor-pointer hover:shadow-lg transition-all duration-300">
+                        <Card
+                          key={movie.id}
+                          className="group hover:shadow-lg transition-all duration-300"
+                        >
                           <div className="relative overflow-hidden rounded-t-lg">
                             <img
                               src={movie.poster}
@@ -276,7 +280,7 @@ export default function UserProfileView(props) {
                             <div className="absolute bottom-2 left-2">
                               <Badge variant="secondary" className="bg-black/80 text-white">
                                 <Star className="h-3 w-3 mr-1 fill-yellow-400 text-yellow-400" />
-                                {movie.rating}
+                                {movie.rating && movie.rating > 0 ? movie.rating.toFixed(1) : 'N/A'}
                               </Badge>
                             </div>
                           </div>
@@ -320,7 +324,7 @@ export default function UserProfileView(props) {
                                 <div className="flex items-center space-x-2">
                                   <Badge variant="secondary" className="text-xs">
                                     <Star className="h-2 w-2 mr-1 fill-yellow-400 text-yellow-400" />
-                                    {movie.rating}
+                                    {movie.rating && movie.rating > 0 ? movie.rating.toFixed(1) : 'N/A'}
                                   </Badge>
                                   {movie.userRating && (
                                     <Badge variant="outline" className="text-xs">
@@ -444,8 +448,8 @@ export default function UserProfileView(props) {
                     </div>
                   )}
 
-                  {/* Controls */}
-                  {filteredRatedMovies.length > 0 && (
+                  {/* Controls - Show when there are ANY rated movies (even if filtered results are 0) */}
+                  {totalRatedMovies > 0 && (
                     <div className="p-4 rounded-lg bg-muted/50 mb-4">
                       <div className="flex flex-wrap items-center justify-between gap-4">
                         <div className="flex items-center space-x-4">
@@ -525,7 +529,10 @@ export default function UserProfileView(props) {
                   ) : ratedViewMode === "grid" ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                       {filteredRatedMovies.map((movie) => (
-                        <Card key={movie.id} className="group cursor-pointer hover:shadow-lg transition-all duration-300">
+                        <Card
+                          key={movie.id}
+                          className="group hover:shadow-lg transition-all duration-300"
+                        >
                           <div className="relative overflow-hidden rounded-t-lg">
                             <img
                               src={movie.poster}
@@ -678,9 +685,15 @@ export default function UserProfileView(props) {
                           <div key={movie.id} className="p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
                             <div className="flex space-x-4">
                               <div className="flex-shrink-0">
-                                <div className="w-16 h-20 overflow-hidden rounded-md">
-                                  <p>Error on loading Login Page!</p>
-                                </div>
+                                <img
+                                  src={movie.posterUrl}
+                                  alt={movie.title}
+                                  className="w-16 h-20 object-cover rounded-md"
+                                  onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = '/placeholder.jpg';
+                                  }}
+                                />
                               </div>
 
                               <div className="flex-grow space-y-2">
@@ -690,11 +703,11 @@ export default function UserProfileView(props) {
                                     <div className="flex items-center space-x-4 text-xs text-muted-foreground mt-1">
                                       <div className="flex items-center space-x-1">
                                         <Star className="h-2 w-2 fill-yellow-400 text-yellow-400" />
-                                        <span>{movie.rating}/10</span>
+                                        <span>{movie.rating && movie.rating > 0 ? movie.rating.toFixed(1) : 'N/A'}/10</span>
                                       </div>
                                       <div className="flex items-center space-x-1">
                                         <Calendar className="h-2 w-2" />
-                                        <span>{new Date(movie.releaseDate).getFullYear()}</span>
+                                        <span>{movie.releaseDate ? new Date(movie.releaseDate).getFullYear() : 'N/A'}</span>
                                       </div>
                                     </div>
                                   </div>
@@ -720,12 +733,19 @@ export default function UserProfileView(props) {
                                     Added {formatDate(movie.addedAt)}
                                   </span>
                                   <div className="flex space-x-2">
-                                    <Button size="sm" variant="outline" className="h-6 text-xs px-2">
-                                      Watch Now
-                                    </Button>
-                                    <Button size="sm" className="h-6 text-xs px-2">
-                                      View Details
-                                    </Button>
+                                    {movie.trailerUrl && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-6 text-xs px-2"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          window.open(movie.trailerUrl, '_blank');
+                                        }}
+                                      >
+                                        Watch Trailer
+                                      </Button>
+                                    )}
                                   </div>
                                 </div>
                               </div>

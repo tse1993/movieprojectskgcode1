@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "../../assets/ui/button";
 import MovieDetailsPage from "../MovieDetails/MovieDetailsPage";
 import MovieGridPage from "../MovieGrid/MovieGridPage";
-import { getTopRatedMovies } from "@/data/movies";
+import { api } from "../../services/api.js";
 
 /** @typedef {import("../../assets/types/pagesProps/topRatedPageProps").TopRatedPageProps} TopRatedPageProps */
 /** @typedef {import("../../assets/types/movieDisplays/movieStruct").Movie} Movie */
@@ -27,21 +27,61 @@ export default function TopRatedView(props) {
   /** @type {Movie|null} */
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [topRatedMovies, setTopRatedMovies] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-  const topRatedMovies = getTopRatedMovies();
+  useEffect(() => {
+    const loadMovies = async (page = 1) => {
+      console.log('[TopRatedView] loadMovies called:', { page });
+      try {
+        setLoading(true);
+        const data = await api.getTopRatedMovies(page);
+        console.log('[TopRatedView] Top rated movies loaded successfully:', {
+          count: data.results?.length,
+          page: data.page,
+          totalPages: data.total_pages
+        });
+        setTopRatedMovies(data.results || []);
+        setCurrentPage(data.page);
+        setTotalPages(data.total_pages);
+      } catch (error) {
+        console.error('[TopRatedView] Failed to load top rated movies:', error);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMovies(currentPage);
+  }, [currentPage]);
 
   /** @param {Movie} movie */
   const handleMovieClick = (movie) => {
+    console.log('[TopRatedView] handleMovieClick called:', { movieId: movie.id, title: movie.title });
     setSelectedMovie(movie);
     setIsDetailsOpen(true);
     onMoviePopupChange?.(true);
   };
 
   const handleCloseDetails = () => {
+    console.log('[TopRatedView] handleCloseDetails called');
     setIsDetailsOpen(false);
     setSelectedMovie(null);
     onMoviePopupChange?.(false);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading top rated movies...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -64,7 +104,7 @@ export default function TopRatedView(props) {
             received the best scores from our community of movie enthusiasts.
           </p>
           <p className="text-sm text-muted-foreground mt-2">
-            Showing {topRatedMovies.length} top-rated movies
+            Showing {topRatedMovies.length} movies (Page {currentPage} of {totalPages})
           </p>
         </div>
 
@@ -78,6 +118,27 @@ export default function TopRatedView(props) {
           onToggleWatchlist={onToggleWatchlist}
           isMovieInWatchlist={isMovieInWatchlist}
         />
+
+        {/* Pagination Controls */}
+        <div className="flex items-center justify-center gap-4 mt-8 pb-8">
+          <Button
+            variant="outline"
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            disabled={currentPage === 1 || loading}
+          >
+            Previous
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+            disabled={currentPage === totalPages || loading}
+          >
+            Next
+          </Button>
+        </div>
       </main>
 
       {/* Movie Details Modal */}

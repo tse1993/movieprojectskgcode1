@@ -1,6 +1,7 @@
 const { getDB } = require('../config/db');
 const { ObjectId } = require('mongodb');
 const tmdbApi = require('../utils/tmdbApi');
+const bcrypt = require('bcrypt');
 
 class UserController {
   async getProfile(req, res) {
@@ -15,7 +16,15 @@ class UserController {
         return res.status(404).json({ message: 'User not found' });
       }
 
-      res.json(user);
+      // Transform response to match login format (id instead of _id)
+      res.json({
+        user: {
+          id: user._id,
+          email: user.email,
+          name: user.name,
+          createdAt: user.createdAt
+        }
+      });
     } catch (error) {
       console.error('Get profile error:', error);
       res.status(500).json({ message: 'Error fetching profile' });
@@ -290,6 +299,131 @@ class UserController {
     } catch (error) {
       console.error('Clear watchlist error:', error);
       res.status(500).json({ message: 'Error clearing watchlist' });
+    }
+  }
+
+  /**
+   * Update user profile (name)
+   * PUT /api/user/profile
+   * Body: { name }
+   */
+  async updateProfile(req, res) {
+    try {
+      const { name } = req.body;
+      const userId = req.user.userId;
+      const db = getDB();
+
+      // Validation
+      if (!name || name.trim().length === 0) {
+        return res.status(400).json({
+          message: 'Name is required'
+        });
+      }
+
+      if (name.trim().length < 2 || name.trim().length > 50) {
+        return res.status(400).json({
+          message: 'Name must be between 2 and 50 characters'
+        });
+      }
+
+      // Update user profile
+      const result = await db.collection('users').updateOne(
+        { _id: userId },
+        { $set: { name: name.trim() } }
+      );
+
+      if (result.matchedCount === 0) {
+        return res.status(404).json({
+          message: 'User not found'
+        });
+      }
+
+      // Return updated user (without password)
+      const updatedUser = await db.collection('users').findOne(
+        { _id: userId },
+        { projection: { password: 0 } }
+      );
+
+      res.json({
+        message: 'Profile updated successfully',
+        user: {
+          id: updatedUser._id,
+          email: updatedUser.email,
+          name: updatedUser.name
+        }
+      });
+    } catch (error) {
+      console.error('Update profile error:', error);
+      res.status(500).json({
+        message: 'Server error',
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Change user password
+   * PUT /api/user/password
+   * Body: { currentPassword, newPassword }
+   */
+  async changePassword(req, res) {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      const userId = req.user.userId;
+      const db = getDB();
+
+      // Validation
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({
+          message: 'Current password and new password are required'
+        });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({
+          message: 'New password must be at least 6 characters'
+        });
+      }
+
+      // Get user with password
+      const user = await db.collection('users').findOne({ _id: userId });
+
+      if (!user) {
+        return res.status(404).json({
+          message: 'User not found'
+        });
+      }
+
+      // Verify current password
+      const isValidPassword = await bcrypt.compare(
+        currentPassword,
+        user.password
+      );
+
+      if (!isValidPassword) {
+        return res.status(401).json({
+          message: 'Current password is incorrect'
+        });
+      }
+
+      // Hash new password
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      // Update password
+      await db.collection('users').updateOne(
+        { _id: userId },
+        { $set: { password: hashedPassword } }
+      );
+
+      res.json({
+        message: 'Password changed successfully'
+      });
+    } catch (error) {
+      console.error('Change password error:', error);
+      res.status(500).json({
+        message: 'Server error',
+        error: error.message
+      });
     }
   }
 }

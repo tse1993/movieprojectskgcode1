@@ -16,6 +16,535 @@
 ### 🎉 **PROJECT COMPLETE!**
 All backend features implemented and tested. Ready for frontend integration and deployment.
 
+### 📋 **Future Enhancements for Frontend Integration**
+
+The following endpoints are **documented for future implementation** to fully support the React frontend requirements:
+
+#### 1. **Genre-Based Movie Filtering** (Future Enhancement)
+```
+GET /api/movies/by-genre/:genre?page=1
+```
+- **Purpose:** Filter movies by specific genre (Action, Drama, Sci-Fi, etc.)
+- **Response:** Paginated list of movies matching the genre
+- **Use case:** Frontend genre filter dropdown
+- **Implementation:** Uses TMDB `/discover/movie` endpoint with genre ID mapping
+- **Status:** ⏳ Not yet implemented - Frontend currently uses local mock data
+
+**Step-by-Step Implementation:**
+
+1. **Add Genre ID Mapping to `src/utils/tmdbApi.js`:**
+```javascript
+// Genre name to TMDB genre ID mapping
+const genreMap = {
+  'Action': 28,
+  'Adventure': 12,
+  'Animation': 16,
+  'Comedy': 35,
+  'Crime': 80,
+  'Documentary': 99,
+  'Drama': 18,
+  'Family': 10751,
+  'Fantasy': 14,
+  'History': 36,
+  'Horror': 27,
+  'Music': 10402,
+  'Mystery': 9648,
+  'Romance': 10749,
+  'Science Fiction': 878,
+  'Sci-Fi': 878, // Alias
+  'TV Movie': 10770,
+  'Thriller': 53,
+  'War': 10752,
+  'Western': 37
+};
+
+// Add new method to tmdbApi object
+async getMoviesByGenre(genre, page = 1) {
+  const genreId = genreMap[genre];
+
+  if (!genreId) {
+    throw new Error(`Unknown genre: ${genre}`);
+  }
+
+  const response = await tmdbClient.get('/discover/movie', {
+    params: {
+      with_genres: genreId,
+      page,
+      sort_by: 'popularity.desc'
+    }
+  });
+
+  return {
+    ...response.data,
+    results: response.data.results.map(movie => this.transformMovie(movie))
+  };
+}
+```
+
+2. **Add Controller Method to `src/controllers/movieController.js`:**
+```javascript
+async getMoviesByGenre(req, res) {
+  try {
+    const { genre } = req.params;
+    const { page = 1 } = req.query;
+
+    // Capitalize first letter for genre matching
+    const genreName = genre.charAt(0).toUpperCase() + genre.slice(1);
+
+    const data = await tmdbApi.getMoviesByGenre(genreName, page);
+    res.json(data);
+  } catch (error) {
+    console.error('Genre movies error:', error);
+
+    if (error.message.includes('Unknown genre')) {
+      return res.status(400).json({ message: error.message });
+    }
+
+    res.status(500).json({ message: 'Error fetching movies by genre' });
+  }
+}
+```
+
+3. **Add Route to `src/routes/api.js`:**
+```javascript
+// Add this line after other movie routes
+router.get('/movies/by-genre/:genre', movieController.getMoviesByGenre);
+```
+
+4. **Test the Endpoint:**
+```bash
+# Test genre filtering
+curl "http://localhost:5000/api/movies/by-genre/action?page=1"
+
+# Test with different genre
+curl "http://localhost:5000/api/movies/by-genre/drama?page=1"
+
+# Test invalid genre (should return 400 error)
+curl "http://localhost:5000/api/movies/by-genre/invalid"
+```
+
+#### 2. **Enhanced Search with Filters** (Future Enhancement)
+```
+GET /api/movies/search?q=query&genre=Action&year=2024&sort=rating&page=1
+```
+- **Purpose:** Advanced search with genre filter, year filter, and sorting
+- **Current:** Basic search by query only (pagination supported)
+- **Enhancement:** Add genre, year, and sort query parameters
+- **Status:** ⏳ Partially implemented - Basic search works, filters need to be added
+
+**Step-by-Step Implementation:**
+
+1. **Update `searchMovies` in `src/controllers/movieController.js`:**
+```javascript
+async searchMovies(req, res) {
+  try {
+    const { q, page = 1, genre, year, sort } = req.query;
+
+    if (!q) {
+      return res.status(400).json({ message: 'Search query is required' });
+    }
+
+    // Get search results from TMDB
+    let data = await tmdbApi.searchMovies(q, page);
+
+    // Apply client-side filtering if genre is specified
+    if (genre) {
+      const genreLower = genre.toLowerCase();
+      data.results = data.results.filter(movie =>
+        movie.genre.toLowerCase().includes(genreLower)
+      );
+    }
+
+    // Apply client-side filtering if year is specified
+    if (year) {
+      data.results = data.results.filter(movie =>
+        movie.releaseDate.startsWith(year)
+      );
+    }
+
+    // Apply sorting
+    if (sort === 'rating') {
+      data.results = data.results.sort((a, b) => b.rating - a.rating);
+    } else if (sort === 'title') {
+      data.results = data.results.sort((a, b) => a.title.localeCompare(b.title));
+    } else if (sort === 'date') {
+      data.results = data.results.sort((a, b) =>
+        new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime()
+      );
+    }
+
+    res.json(data);
+  } catch (error) {
+    console.error('Search error:', error);
+    res.status(500).json({ message: 'Error searching movies' });
+  }
+}
+```
+
+2. **Test the Enhanced Search:**
+```bash
+# Search with genre filter
+curl "http://localhost:5000/api/movies/search?q=fight&genre=Action"
+
+# Search with year filter
+curl "http://localhost:5000/api/movies/search?q=matrix&year=1999"
+
+# Search with sorting
+curl "http://localhost:5000/api/movies/search?q=batman&sort=rating"
+
+# Search with multiple filters
+curl "http://localhost:5000/api/movies/search?q=action&genre=Action&sort=rating&page=1"
+```
+
+**Note:** These are client-side filters applied after TMDB search. For better performance with large result sets, consider using TMDB's `/discover/movie` endpoint with filters instead.
+
+#### 3. **Batch Movie Details** (Future Enhancement)
+```
+POST /api/movies/batch
+Body: { tmdbIds: [550, 680, 13] }
+```
+- **Purpose:** Fetch multiple movie details in one request
+- **Response:** Array of movie objects
+- **Use case:** Efficiently load favorites/watchlist with full movie details
+- **Benefits:** Reduces frontend API calls from N to 1
+- **Status:** ⏳ Not yet implemented - Frontend makes individual calls via `Promise.all()`
+
+**Step-by-Step Implementation:**
+
+1. **Add `getBatchMovieDetails` to `src/controllers/movieController.js`:**
+```javascript
+async getBatchMovieDetails(req, res) {
+  try {
+    const { tmdbIds } = req.body;
+
+    // Validate input
+    if (!Array.isArray(tmdbIds) || tmdbIds.length === 0) {
+      return res.status(400).json({ message: 'tmdbIds array is required' });
+    }
+
+    if (tmdbIds.length > 50) {
+      return res.status(400).json({ message: 'Maximum 50 movie IDs allowed per request' });
+    }
+
+    // Fetch all movies in parallel
+    const movies = await Promise.all(
+      tmdbIds.map(async (id) => {
+        try {
+          return await tmdbApi.getMovieDetails(id);
+        } catch (error) {
+          console.error(`Error fetching movie ${id}:`, error);
+          return null; // Return null for failed requests
+        }
+      })
+    );
+
+    // Filter out failed requests (null values)
+    const successfulMovies = movies.filter(movie => movie !== null);
+
+    res.json({
+      requested: tmdbIds.length,
+      returned: successfulMovies.length,
+      movies: successfulMovies
+    });
+  } catch (error) {
+    console.error('Batch movies error:', error);
+    res.status(500).json({ message: 'Error fetching batch movie details' });
+  }
+}
+```
+
+2. **Add Route to `src/routes/api.js`:**
+```javascript
+// Add this line after other movie routes
+router.post('/movies/batch', movieController.getBatchMovieDetails);
+```
+
+3. **Test the Batch Endpoint:**
+```bash
+# Test batch fetch
+curl -X POST http://localhost:5000/api/movies/batch \
+  -H "Content-Type: application/json" \
+  -d '{"tmdbIds": [550, 680, 13, 27205]}'
+
+# Response format:
+# {
+#   "requested": 4,
+#   "returned": 4,
+#   "movies": [
+#     { "id": 550, "title": "Fight Club", ... },
+#     { "id": 680, "title": "Pulp Fiction", ... },
+#     { "id": 13, "title": "Forrest Gump", ... },
+#     { "id": 27205, "title": "Inception", ... }
+#   ]
+# }
+
+# Test with invalid movie IDs (some will fail gracefully)
+curl -X POST http://localhost:5000/api/movies/batch \
+  -H "Content-Type: application/json" \
+  -d '{"tmdbIds": [550, 9999999, 680]}'
+```
+
+**Usage in Frontend (Example):**
+```javascript
+// Instead of this (N requests):
+const favoriteIds = [550, 680, 13, 27205];
+const movies = await Promise.all(
+  favoriteIds.map(id => fetch(`/api/movies/${id}`).then(r => r.json()))
+);
+
+// Use this (1 request):
+const response = await fetch('/api/movies/batch', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ tmdbIds: favoriteIds })
+});
+const data = await response.json();
+const movies = data.movies;
+```
+
+#### 4. **Genre ID Mapping Utility** (Future Enhancement)
+- **Purpose:** Map genre names (Action, Drama) to TMDB genre IDs (28, 18)
+- **Location:** `src/utils/tmdbApi.js`
+- **Implementation:** Add `genreNameToId` mapping object (already shown in Enhancement #1)
+- **Required for:** Genre-based filtering endpoint
+- **Status:** ⏳ Not yet implemented - See implementation in Enhancement #1 above
+
+---
+
+### 📋 **Critical Missing Endpoints for Settings Page**
+
+The following endpoints are **required immediately** for the Settings page functionality in the frontend:
+
+#### 5. **Update User Profile/Name** (Critical - Required Now)
+```
+PUT /api/user/profile
+Body: { name: "New Name" }
+```
+- **Purpose:** Allow users to update their display name
+- **Frontend:** Settings page (`Settings/SettingsView.jsx`)
+- **Current Status:** ❌ Frontend fakes this with `setTimeout`
+- **Priority:** 🔴 Critical - Settings page non-functional without this
+
+**Step-by-Step Implementation:**
+
+1. **Add `updateProfile` to `src/controllers/userController.js`:**
+```javascript
+async updateProfile(req, res) {
+  try {
+    const { name } = req.body;
+    const userId = req.user.userId;
+    const db = getDB();
+
+    // Validate input
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: 'Name is required' });
+    }
+
+    if (name.trim().length < 2) {
+      return res.status(400).json({ message: 'Name must be at least 2 characters' });
+    }
+
+    if (name.trim().length > 50) {
+      return res.status(400).json({ message: 'Name must not exceed 50 characters' });
+    }
+
+    // Update user name
+    const result = await db.collection('users').updateOne(
+      { _id: userId },
+      { $set: { name: name.trim() } }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Get updated user (without password)
+    const updatedUser = await db.collection('users').findOne(
+      { _id: userId },
+      { projection: { password: 0 } }
+    );
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: updatedUser
+    });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({ message: 'Error updating profile' });
+  }
+}
+```
+
+2. **Add Route to `src/routes/api.js`:**
+```javascript
+// Add this line with other user routes
+router.put('/user/profile', authenticateToken, userController.updateProfile);
+```
+
+3. **Test the Endpoint:**
+```bash
+# Test profile update
+curl -X PUT http://localhost:5000/api/user/profile \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "John Doe Updated"}'
+
+# Response:
+# {
+#   "message": "Profile updated successfully",
+#   "user": {
+#     "_id": "...",
+#     "email": "john@example.com",
+#     "name": "John Doe Updated",
+#     "favorites": [...],
+#     "watchlist": [...],
+#     "ratings": [...]
+#   }
+# }
+```
+
+#### 6. **Change Password** (Critical - Required Now)
+```
+PUT /api/user/password
+Body: {
+  currentPassword: "old123",
+  newPassword: "new456"
+}
+```
+- **Purpose:** Allow users to change their password securely
+- **Frontend:** Settings page (`Settings/SettingsView.jsx`)
+- **Current Status:** ❌ Frontend fakes this with `setTimeout`
+- **Priority:** 🔴 Critical - Settings page non-functional without this
+
+**Step-by-Step Implementation:**
+
+1. **Add `changePassword` to `src/controllers/userController.js`:**
+```javascript
+async changePassword(req, res) {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.userId;
+    const db = getDB();
+
+    // Validate input
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'Current password and new password are required' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: 'New password must be at least 6 characters' });
+    }
+
+    // Get user with password
+    const user = await db.collection('users').findOne({ _id: userId });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Verify current password
+    const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+
+    if (!isValidPassword) {
+      return res.status(400).json({ message: 'Current password is incorrect' });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password
+    await db.collection('users').updateOne(
+      { _id: userId },
+      { $set: { password: hashedPassword } }
+    );
+
+    res.json({ message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({ message: 'Error changing password' });
+  }
+}
+```
+
+2. **Add Route to `src/routes/api.js`:**
+```javascript
+// Add this line with other user routes
+router.put('/user/password', authenticateToken, userController.changePassword);
+```
+
+3. **Test the Endpoint:**
+```bash
+# Test password change
+curl -X PUT http://localhost:5000/api/user/password \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "currentPassword": "password123",
+    "newPassword": "newPassword456"
+  }'
+
+# Success response:
+# { "message": "Password changed successfully" }
+
+# Test with wrong current password:
+curl -X PUT http://localhost:5000/api/user/password \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "currentPassword": "wrongPassword",
+    "newPassword": "newPassword456"
+  }'
+
+# Error response (400):
+# { "message": "Current password is incorrect" }
+```
+
+---
+
+### 📋 **Optional Enhancements for Social Features**
+
+#### 7. **Like/Unlike Comments** (Medium Priority)
+```
+POST /api/comments/:id/like
+DELETE /api/comments/:id/like
+```
+- **Purpose:** Allow users to like/unlike comments (Feed page feature)
+- **Frontend:** Feed page displays likes count but no interaction yet
+- **Current Status:** ⏳ Likes are displayed but cannot be added/removed
+- **Priority:** 🟡 Medium - Enhances social engagement
+
+**Implementation Notes:**
+- Add `likes` array to comments schema: `likes: [ObjectId]` (user IDs who liked)
+- Add `likesCount` field for performance: `likesCount: Number`
+- Implement toggle logic similar to favorites/watchlist
+
+#### 8. **Password Reset Flow** (Low Priority - Production Feature)
+
+**Frontend has "Forgot Password" button** (`Login/LoginView.jsx:146`) but it's non-functional.
+
+##### a) Request Password Reset
+```
+POST /api/auth/forgot-password
+Body: { email: "user@example.com" }
+```
+- **Purpose:** Send password reset email with token
+- **Implementation:** Generate reset token, store with expiry, send email
+- **Status:** ⏳ Not implemented - Production feature
+
+##### b) Reset Password with Token
+```
+POST /api/auth/reset-password
+Body: {
+  token: "reset-token",
+  newPassword: "new123"
+}
+```
+- **Purpose:** Reset password using email token
+- **Implementation:** Verify token validity and expiry, update password
+- **Status:** ⏳ Not implemented - Production feature
+
+---
+
 ### 🎯 **Current Status**
 - Server: ✅ Running on http://localhost:5000
 - Database: ✅ Connected to MongoDB Atlas
@@ -412,13 +941,26 @@ curl -X POST http://localhost:5000/api/auth/login \
 ```
 
 ### 🎬 Movie Routes (TMDB Integration)
-| Method | Endpoint | Purpose | Auth Required |
-|--------|----------|---------|---------------|
-| `GET` | `/api/movies/search?q=query` | Search movies | ❌ No |
-| `GET` | `/api/movies/popular` | Popular movies | ❌ No |
-| `GET` | `/api/movies/top-rated` | Top rated movies | ❌ No |
-| `GET` | `/api/movies/upcoming` | Upcoming movies | ❌ No |
-| `GET` | `/api/movies/:id` | Movie details + user data | 🔶 Optional |
+| Method | Endpoint | Purpose | Auth Required | Pagination |
+|--------|----------|---------|---------------|------------|
+| `GET` | `/api/movies/search?q=query&page=1` | Search movies | ❌ No | ✅ Yes |
+| `GET` | `/api/movies/popular?page=1` | Popular movies | ❌ No | ✅ Yes |
+| `GET` | `/api/movies/top-rated?page=1` | Top rated movies | ❌ No | ✅ Yes |
+| `GET` | `/api/movies/upcoming?page=1` | Upcoming movies | ❌ No | ✅ Yes |
+| `GET` | `/api/movies/:id` | Movie details + user data | 🔶 Optional | ❌ N/A |
+
+**Pagination Response Format:**
+```json
+{
+  "page": 1,
+  "total_pages": 500,
+  "total_results": 10000,
+  "results": [
+    { "id": 550, "title": "Fight Club", ... },
+    { "id": 680, "title": "Pulp Fiction", ... }
+  ]
+}
+```
 
 **Example: Get Movie Details**
 ```bash

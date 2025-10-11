@@ -19,11 +19,14 @@ router.get('/movies/search', movieController.searchMovies);
 router.get('/movies/popular', movieController.getPopularMovies);
 router.get('/movies/top-rated', movieController.getTopRatedMovies);
 router.get('/movies/upcoming', movieController.getUpcomingMovies);
+router.get('/movies/genre/:genre', movieController.getMoviesByGenre);
 router.get('/movies/:id', optionalAuth, movieController.getMovieDetails);
 
 // USER ROUTES (AUTHENTICATED)
 // Profile & Statistics
 router.get('/user/profile', authenticateToken, userController.getProfile);
+router.put('/user/profile', authenticateToken, userController.updateProfile);
+router.put('/user/password', authenticateToken, userController.changePassword);
 router.get('/user/statistics', authenticateToken, userController.getUserStatistics);
 
 // Ratings

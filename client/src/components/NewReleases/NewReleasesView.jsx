@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "../../assets/ui/button";
-import { getNewReleases } from "@/data/movies";
+import { api } from "../../services/api.js";
 
 import MovieGridPage from "../MovieGrid/MovieGridPage";
 import MovieDetailsPage from "../MovieDetails/MovieDetailsPage";
@@ -27,20 +27,60 @@ export default function NewReleasesView(props) {
 
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [newReleases, setNewReleases] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-  const newReleases = getNewReleases();
+  useEffect(() => {
+    const loadMovies = async (page = 1) => {
+      console.log('[NewReleasesView] loadMovies called:', { page });
+      try {
+        setLoading(true);
+        const data = await api.getUpcomingMovies(page);
+        console.log('[NewReleasesView] Upcoming movies loaded successfully:', {
+          count: data.results?.length,
+          page: data.page,
+          totalPages: data.total_pages
+        });
+        setNewReleases(data.results || []);
+        setCurrentPage(data.page);
+        setTotalPages(data.total_pages);
+      } catch (error) {
+        console.error('[NewReleasesView] Failed to load upcoming movies:', error);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMovies(currentPage);
+  }, [currentPage]);
 
   const handleMovieClick = (movie) => {
+    console.log('[NewReleasesView] handleMovieClick called:', { movieId: movie.id, title: movie.title });
     setSelectedMovie(movie);
     setIsDetailsOpen(true);
     onMoviePopupChange?.(true);
   };
 
   const handleCloseDetails = () => {
+    console.log('[NewReleasesView] handleCloseDetails called');
     setIsDetailsOpen(false);
     setSelectedMovie(null);
     onMoviePopupChange?.(false);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading upcoming movies...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -63,7 +103,7 @@ export default function NewReleasesView(props) {
             content that has recently joined our platform.
           </p>
           <p className="text-sm text-muted-foreground mt-2">
-            Showing {newReleases.length} new releases from the last 6 months
+            Showing {newReleases.length} movies (Page {currentPage} of {totalPages})
           </p>
         </div>
 
@@ -77,6 +117,27 @@ export default function NewReleasesView(props) {
           onToggleWatchlist={onToggleWatchlist}
           isMovieInWatchlist={isMovieInWatchlist}
         />
+
+        {/* Pagination Controls */}
+        <div className="flex items-center justify-center gap-4 mt-8 pb-8">
+          <Button
+            variant="outline"
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            disabled={currentPage === 1 || loading}
+          >
+            Previous
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+            disabled={currentPage === totalPages || loading}
+          >
+            Next
+          </Button>
+        </div>
       </main>
 
       {/* Movie Details Modal */}
