@@ -35,11 +35,15 @@ export default function MovieCardView({ movie, onClick }) {
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex items-center space-x-1">
             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-            <span>{movie.rating}</span>
+            <span>{movie.rating ? movie.rating.toFixed(1) : 'N/A'}</span>
           </div>
           <div className="flex items-center space-x-1">
             <Calendar className="h-4 w-4" />
-            <span>{new Date(movie.releaseDate).getFullYear()}</span>
+            <span>
+              {movie.releaseDate
+                ? new Date(movie.releaseDate).getFullYear()
+                : 'N/A'}
+            </span>
           </div>
         </div>
 
