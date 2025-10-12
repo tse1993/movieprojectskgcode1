@@ -34,15 +34,9 @@ export default function TopRatedView(props) {
 
   useEffect(() => {
     const loadMovies = async (page = 1) => {
-      console.log('[TopRatedView] loadMovies called:', { page });
       try {
         setLoading(true);
         const data = await api.getTopRatedMovies(page);
-        console.log('[TopRatedView] Top rated movies loaded successfully:', {
-          count: data.results?.length,
-          page: data.page,
-          totalPages: data.total_pages
-        });
         setTopRatedMovies(data.results || []);
         setCurrentPage(data.page);
         setTotalPages(data.total_pages);
@@ -59,14 +53,12 @@ export default function TopRatedView(props) {
 
   /** @param {Movie} movie */
   const handleMovieClick = (movie) => {
-    console.log('[TopRatedView] handleMovieClick called:', { movieId: movie.id, title: movie.title });
     setSelectedMovie(movie);
     setIsDetailsOpen(true);
     onMoviePopupChange?.(true);
   };
 
   const handleCloseDetails = () => {
-    console.log('[TopRatedView] handleCloseDetails called');
     setIsDetailsOpen(false);
     setSelectedMovie(null);
     onMoviePopupChange?.(false);

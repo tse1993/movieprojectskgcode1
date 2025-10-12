@@ -39,7 +39,9 @@ export default function UserProfileView(props) {
     handleRatedDeleteClick, handleClearAllRatings,
     ratingDistribution, getRatingBadgeVariant, getRatingColor,
 
-    watchlistMoviesWithDetails, handleRemoveFromWatchlist, onClearAllWatchlist,
+    watchlistMoviesWithDetails, handleRemoveFromWatchlist,
+    showWatchlistDeleteDialog, setShowWatchlistDeleteDialog,
+    handleWatchlistDeleteClick, handleClearAllWatchlist,
 
     formatDate, formatRuntime,
   } = props;
@@ -654,15 +656,33 @@ export default function UserProfileView(props) {
                     </div>
 
                     {watchlistMoviesWithDetails.length > 0 && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={onClearAllWatchlist}
-                        className="flex items-center space-x-2 text-destructive hover:bg-destructive/10"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span>Clear All</span>
-                      </Button>
+                      <AlertDialog open={showWatchlistDeleteDialog} onOpenChange={setShowWatchlistDeleteDialog}>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={handleWatchlistDeleteClick}
+                            className="flex items-center space-x-2"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span>Clear All</span>
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure you want to delete all watchlist items?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will permanently delete all your watchlist items and remove them from your account.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>No</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleClearAllWatchlist}>
+                              Yes, delete all watchlist items
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     )}
                   </div>
 

@@ -12,6 +12,7 @@
  * @property {()=>void} [onNavigateToPopular]
  * @property {()=>void} [onNavigateToTopRated]
  * @property {()=>void} [onNavigateToNewReleases]
+ * @property {()=>void} [onNavigateToMain]
  */
 
 export {};

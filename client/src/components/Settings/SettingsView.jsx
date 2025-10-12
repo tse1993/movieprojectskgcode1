@@ -21,101 +21,56 @@ export default function SettingsView({ user, onUpdateUser, onBack }) {
   const [profileError, setProfileError] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
-  // Log component mount only once
-  useEffect(() => {
-    console.log('[SettingsView] Component mounted with props:', { 
-      user: user ? { id: user._id, name: user.name, email: user.email } : null,
-      hasOnUpdateUser: typeof onUpdateUser === 'function',
-      hasOnBack: typeof onBack === 'function'
-    });
-    console.log('[SettingsView] Initial state set:', {
-      username,
-      hasCurrentPassword: !!currentPassword,
-      hasNewPassword: !!newPassword,
-      hasConfirmPassword: !!confirmPassword
-    });
-  }, []); // Empty dependency array means this runs only once on mount
+  // Empty useEffect removed - not needed
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
-    console.log('[SettingsView] handleUpdateProfile called', { username, currentUser: user });
     setIsUpdatingProfile(true);
-    setProfileError(""); // Clear any previous errors
+    setProfileError("");
 
     try {
-      console.log('[SettingsView] Calling api.updateProfile with username:', username);
       const response = await api.updateProfile(username);
-      console.log('[SettingsView] api.updateProfile successful:', response);
-      
       onUpdateUser(response.user);
-      console.log('[SettingsView] User updated successfully, calling onUpdateUser with:', response.user);
       toast.success("Information updated successfully!");
     } catch (error) {
-      console.error('[SettingsView] Failed to update profile:', {
-        error: error.message,
-        status: error.status,
-        response: error.response,
-        username: username
-      });
+      console.error('[SettingsView] Failed to update profile:', error);
       setProfileError(error.message || "Failed to update profile. Please try again.");
       toast.error(error.message || "Failed to update profile. Please try again.");
     } finally {
       setIsUpdatingProfile(false);
-      console.log('[SettingsView] Profile update process completed');
     }
   };
 
   const handleUpdatePassword = async (e) => {
     e.preventDefault();
-    console.log('[SettingsView] handleUpdatePassword called', {
-      hasCurrentPassword: !!currentPassword,
-      hasNewPassword: !!newPassword,
-      hasConfirmPassword: !!confirmPassword,
-      newPasswordLength: newPassword.length
-    });
-
-    setPasswordError(""); // Clear any previous errors
+    setPasswordError("");
 
     if (newPassword !== confirmPassword) {
-      console.error('[SettingsView] Password validation failed: passwords do not match');
       setPasswordError("New passwords don't match!");
       toast.error("New passwords don't match!");
       return;
     }
 
     if (newPassword.length < 6) {
-      console.error('[SettingsView] Password validation failed: password too short', { length: newPassword.length });
       setPasswordError("Password must be at least 6 characters long!");
       toast.error("Password must be at least 6 characters long!");
       return;
     }
 
     setIsUpdatingPassword(true);
-    console.log('[SettingsView] Starting password change process...');
 
     try {
-      console.log('[SettingsView] Calling api.changePassword...');
       const response = await api.changePassword(currentPassword, newPassword);
-      console.log('[SettingsView] api.changePassword successful:', response);
-      
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      console.log('[SettingsView] Password form fields cleared');
       toast.success("Password updated successfully!");
     } catch (error) {
-      console.error('[SettingsView] Failed to change password:', {
-        error: error.message,
-        status: error.status,
-        response: error.response,
-        hasCurrentPassword: !!currentPassword,
-        newPasswordLength: newPassword.length
-      });
+      console.error('[SettingsView] Failed to change password:', error);
       setPasswordError(error.message || "Failed to change password. Please check your current password and try again.");
       toast.error(error.message || "Failed to change password. Please check your current password and try again.");
     } finally {
       setIsUpdatingPassword(false);
-      console.log('[SettingsView] Password change process completed');
     }
   };
 

@@ -22,23 +22,18 @@ export default function MovieCommentsView({ movieId, comments, currentUserName, 
   const movieComments = Array.isArray(comments) ? comments : [];
 
   const handleSubmitComment = async () => {
-    console.log('[MovieCommentsView] handleSubmitComment called:', { movieId, commentLength: newComment.trim().length });
-
     if (!newComment.trim()) {
-      console.warn('[MovieCommentsView] Empty comment submission attempted');
       toast.error("Please enter a comment");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      console.log('[MovieCommentsView] Submitting comment to parent handler');
       onAddComment?.(movieId, newComment.trim());
       setNewComment("");
-      console.log('[MovieCommentsView] Comment submitted successfully');
       toast.success("Comment added successfully!");
     } catch (error) {
-      console.error('[MovieCommentsView] Failed to add comment:', { movieId, error });
+      console.error('[MovieCommentsView] Failed to add comment:', error);
       toast.error("Failed to add comment");
       throw error;
     } finally {

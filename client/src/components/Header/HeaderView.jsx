@@ -24,14 +24,18 @@ export default function HeaderView({
   onNavigateToPopular,
   onNavigateToTopRated,
   onNavigateToNewReleases,
+  onNavigateToMain,
 }) {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center px-4">
-        <div className="mr-6 flex items-center space-x-2">
+        <button
+          onClick={onNavigateToMain}
+          className="mr-6 flex items-center space-x-2 hover:opacity-80 transition-opacity cursor-pointer"
+        >
           <div className="h-8 w-8 rounded bg-primary"></div>
           <span className="hidden font-bold sm:inline-block">MovieDB</span>
-        </div>
+        </button>
 
         <nav className="flex items-center space-x-6 text-sm font-medium">
           <button

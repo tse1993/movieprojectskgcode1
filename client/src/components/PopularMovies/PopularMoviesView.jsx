@@ -33,15 +33,9 @@ export default function PopularMoviesView(props) {
 
   useEffect(() => {
     const loadMovies = async (page = 1) => {
-      console.log('[PopularMoviesView] loadMovies called:', { page });
       try {
         setLoading(true);
         const data = await api.getPopularMovies(page);
-        console.log('[PopularMoviesView] Popular movies loaded successfully:', {
-          count: data.results?.length,
-          page: data.page,
-          totalPages: data.total_pages
-        });
         setPopularMovies(data.results || []);
         setCurrentPage(data.page);
         setTotalPages(data.total_pages);
@@ -57,14 +51,12 @@ export default function PopularMoviesView(props) {
   }, [currentPage]);
 
   const handleMovieClick = (movie) => {
-    console.log('[PopularMoviesView] handleMovieClick called:', { movieId: movie.id, title: movie.title });
     setSelectedMovie(movie);
     setIsDetailsOpen(true);
     onMoviePopupChange?.(true);
   };
 
   const handleCloseDetails = () => {
-    console.log('[PopularMoviesView] handleCloseDetails called');
     setIsDetailsOpen(false);
     setSelectedMovie(null);
     onMoviePopupChange?.(false);

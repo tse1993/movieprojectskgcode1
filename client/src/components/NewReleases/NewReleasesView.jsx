@@ -34,15 +34,9 @@ export default function NewReleasesView(props) {
 
   useEffect(() => {
     const loadMovies = async (page = 1) => {
-      console.log('[NewReleasesView] loadMovies called:', { page });
       try {
         setLoading(true);
         const data = await api.getUpcomingMovies(page);
-        console.log('[NewReleasesView] Upcoming movies loaded successfully:', {
-          count: data.results?.length,
-          page: data.page,
-          totalPages: data.total_pages
-        });
         setNewReleases(data.results || []);
         setCurrentPage(data.page);
         setTotalPages(data.total_pages);
@@ -58,14 +52,12 @@ export default function NewReleasesView(props) {
   }, [currentPage]);
 
   const handleMovieClick = (movie) => {
-    console.log('[NewReleasesView] handleMovieClick called:', { movieId: movie.id, title: movie.title });
     setSelectedMovie(movie);
     setIsDetailsOpen(true);
     onMoviePopupChange?.(true);
   };
 
   const handleCloseDetails = () => {
-    console.log('[NewReleasesView] handleCloseDetails called');
     setIsDetailsOpen(false);
     setSelectedMovie(null);
     onMoviePopupChange?.(false);

@@ -36,20 +36,12 @@ function RootContent() {
   }, [user]);
 
   const loadUserData = async () => {
-    console.log('[Root] loadUserData called for user:', user?.email);
     try {
-      console.log('[Root] Fetching user data (ratings, favorites, watchlist) in parallel...');
       const [ratingsData, favoritesData, watchlistData] = await Promise.all([
         api.getRatings(),
         api.getFavorites(),
         api.getWatchlist()
       ]);
-
-      console.log('[Root] User data loaded successfully:', {
-        ratingsCount: ratingsData?.length,
-        favoritesCount: favoritesData?.length,
-        watchlistCount: watchlistData?.length
-      });
 
       // Store ALL rating data from API (includes user rating + enriched movie details)
       setMovieRatings(ratingsData.map(r => ({
@@ -99,33 +91,26 @@ function RootContent() {
 
   // User updates
   const handleUpdateUser = (updatedUser) => {
-    console.log('[Root] handleUpdateUser called:', { updatedUser });
     updateUser(updatedUser);
   };
 
   // Ratings
   const handleRateMovie = async (movieId, rating) => {
-    console.log('[Root] handleRateMovie called:', { movieId, rating, user: user?.email });
-    if (!user) {
-      console.warn('[Root] handleRateMovie - No user logged in');
-      return;
-    }
+    if (!user) return;
 
     try {
       await api.rateMovie(parseInt(movieId), rating);
-      const newRating = { movieId, rating, ratedAt: new Date().toISOString() };
-      console.log('[Root] Movie rated successfully, updating local state:', newRating);
-      setMovieRatings((prev) => {
-        const idx = prev.findIndex((r) => r.movieId === movieId);
-        if (idx >= 0) {
-          const next = [...prev];
-          next[idx] = newRating;
-          return next;
-        }
-        return [...prev, newRating];
-      });
+
+      // Reload ratings from API to get enriched movie data
+      const ratingsData = await api.getRatings();
+      setMovieRatings(ratingsData.map(r => ({
+        ...r,  // Preserve all fields including the nested 'movie' object
+        movieId: r.tmdbId.toString(),
+        rating: r.rating,
+        ratedAt: r.ratedAt
+      })));
     } catch (error) {
-      console.error('[Root] Failed to rate movie:', { movieId, rating, error });
+      console.error('[Root] Rate movie failed:', error);
       throw error;
     }
   };
@@ -136,41 +121,33 @@ function RootContent() {
   };
 
   const handleClearAllRatings = async () => {
-    console.log('[Root] handleClearAllRatings called, user:', user?.email);
-    if (!user) {
-      console.warn('[Root] handleClearAllRatings - No user logged in');
-      return;
-    }
+    if (!user) return;
 
     try {
       await api.clearAllRatings();
-      console.log('[Root] All ratings cleared successfully');
       setMovieRatings([]);
     } catch (error) {
-      console.error('[Root] Failed to clear ratings:', error);
+      console.error('[Root] Clear ratings failed:', error);
       throw error;
     }
   };
 
   // Favorites
   const handleToggleFavorite = async (movieId) => {
-    console.log('[Root] handleToggleFavorite called:', { movieId, user: user?.email });
-    if (!user) {
-      console.warn('[Root] handleToggleFavorite - No user logged in');
-      return;
-    }
+    if (!user) return;
 
     try {
       await api.toggleFavorite(parseInt(movieId));
-      setFavoriteMovies((prev) => {
-        const isFavorite = prev.some((f) => f.movieId === movieId);
-        console.log('[Root] Toggle favorite successful, updating local state:', { movieId, wasFavorite: isFavorite, nowFavorite: !isFavorite });
-        return isFavorite
-          ? prev.filter((f) => f.movieId !== movieId)
-          : [...prev, { movieId, addedAt: new Date().toISOString() }];
-      });
+
+      // Reload favorites from API to get enriched movie data
+      const favoritesData = await api.getFavorites();
+      setFavoriteMovies(favoritesData.map(f => ({
+        ...f,  // Preserve all movie fields (id, title, posterUrl, rating, etc.)
+        movieId: f.id.toString(),
+        addedAt: f.addedAt || new Date().toISOString()
+      })));
     } catch (error) {
-      console.error('[Root] Failed to toggle favorite:', { movieId, error });
+      console.error('[Root] Toggle favorite failed:', error);
       throw error;
     }
   };
@@ -179,42 +156,33 @@ function RootContent() {
     favoriteMovies.some((f) => f.movieId === movieId);
 
   const handleClearAllFavorites = async () => {
-    console.log('[Root] handleClearAllFavorites called, user:', user?.email);
-    if (!user) {
-      console.warn('[Root] handleClearAllFavorites - No user logged in');
-      return;
-    }
+    if (!user) return;
 
     try {
       await api.clearAllFavorites();
-      console.log('[Root] All favorites cleared successfully');
       setFavoriteMovies([]);
     } catch (error) {
-      console.error('[Root] Failed to clear favorites:', error);
+      console.error('[Root] Clear favorites failed:', error);
       throw error;
     }
   };
 
   // Watchlist
   const handleToggleWatchlist = async (movieId) => {
-    console.log('[Root] handleToggleWatchlist called:', { movieId, user: user?.email });
-    if (!user) {
-      console.warn('[Root] handleToggleWatchlist - No user logged in');
-      return;
-    }
+    if (!user) return;
 
     try {
       await api.toggleWatchlist(parseInt(movieId));
-      const isInWatchlist = watchlistMovies.some((w) => w.movieId === movieId);
-      console.log('[Root] Toggle watchlist successful, updating local state:', { movieId, wasInWatchlist: isInWatchlist, nowInWatchlist: !isInWatchlist });
-      if (isInWatchlist) {
-        setWatchlistMovies(watchlistMovies.filter((w) => w.movieId !== movieId));
-      } else {
-        const newItem = { movieId, addedAt: new Date().toISOString() };
-        setWatchlistMovies([...watchlistMovies, newItem]);
-      }
+
+      // Reload watchlist from API to get enriched movie data
+      const watchlistData = await api.getWatchlist();
+      setWatchlistMovies(watchlistData.map(w => ({
+        ...w,  // Preserve all movie fields (id, title, posterUrl, rating, etc.)
+        movieId: w.id.toString(),
+        addedAt: w.addedAt || new Date().toISOString()
+      })));
     } catch (error) {
-      console.error('[Root] Failed to toggle watchlist:', { movieId, error });
+      console.error('[Root] Toggle watchlist failed:', error);
       throw error;
     }
   };
@@ -223,45 +191,33 @@ function RootContent() {
     watchlistMovies.some((w) => w.movieId === movieId);
 
   const handleClearAllWatchlist = async () => {
-    console.log('[Root] handleClearAllWatchlist called, user:', user?.email);
-    if (!user) {
-      console.warn('[Root] handleClearAllWatchlist - No user logged in');
-      return;
-    }
+    if (!user) return;
 
     try {
       await api.clearAllWatchlist();
-      console.log('[Root] All watchlist items cleared successfully');
       setWatchlistMovies([]);
     } catch (error) {
-      console.error('[Root] Failed to clear watchlist:', error);
+      console.error('[Root] Clear watchlist failed:', error);
       throw error;
     }
   };
 
   const handleRemoveFromWatchlist = async (movieId) => {
-    console.log('[Root] handleRemoveFromWatchlist called:', { movieId, user: user?.email });
-    if (!user) {
-      console.warn('[Root] handleRemoveFromWatchlist - No user logged in');
-      return;
-    }
+    if (!user) return;
 
     try {
       await api.toggleWatchlist(parseInt(movieId));
-      console.log('[Root] Movie removed from watchlist successfully:', movieId);
       setWatchlistMovies((prev) => prev.filter((w) => w.movieId !== movieId));
     } catch (error) {
-      console.error('[Root] Failed to remove from watchlist:', { movieId, error });
+      console.error('[Root] Remove from watchlist failed:', error);
       throw error;
     }
   };
 
   // Comments
   const handleLoadComments = async (movieId) => {
-    console.log('[Root] handleLoadComments called:', { movieId });
     try {
       const comments = await api.getComments(parseInt(movieId));
-      console.log('[Root] Comments loaded:', { movieId, count: comments?.length });
 
       // Map comments to expected format
       const formattedComments = comments.map(comment => ({
@@ -280,25 +236,19 @@ function RootContent() {
 
       return formattedComments;
     } catch (error) {
-      console.error('[Root] Failed to load comments:', { movieId, error });
+      console.error('[Root] Load comments failed:', error);
       throw error;
     }
   };
 
   const handleAddComment = async (movieId, content) => {
-    console.log('[Root] handleAddComment called:', { movieId, contentLength: content?.length, user: user?.email });
-    if (!user) {
-      console.warn('[Root] handleAddComment - No user logged in');
-      return;
-    }
+    if (!user) return;
 
     try {
       await api.addComment(parseInt(movieId), content);
-      console.log('[Root] Comment added successfully, fetching updated comments for movie:', movieId);
 
       // Fetch latest comments from backend after successful post
       const latestComments = await api.getComments(parseInt(movieId));
-      console.log('[Root] Latest comments fetched:', { movieId, count: latestComments?.length });
 
       // Map comments to expected format
       const formattedComments = latestComments.map(comment => ({
@@ -315,7 +265,7 @@ function RootContent() {
         [movieId]: formattedComments
       }));
     } catch (error) {
-      console.error('[Root] Failed to add comment:', { movieId, error });
+      console.error('[Root] Add comment failed:', error);
       throw error;
     }
   };

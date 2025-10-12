@@ -44,7 +44,6 @@ export default function HeroSectionView({ featuredMovie, onMovieClick }) {
               size="lg"
               className="flex items-center space-x-2"
               onClick={() => {
-                console.log('[HeroSectionView] Watch Trailer clicked:', { title: featuredMovie.title, trailerUrl: featuredMovie.trailerUrl });
                 try {
                   window.open(featuredMovie.trailerUrl, '_blank');
                 } catch (error) {
@@ -62,7 +61,6 @@ export default function HeroSectionView({ featuredMovie, onMovieClick }) {
             variant="outline"
             className="flex items-center space-x-2 bg-white/10 border-white/20 text-white hover:bg-white/20"
             onClick={() => {
-              console.log('[HeroSectionView] More Info clicked:', { movieId: featuredMovie.id, title: featuredMovie.title });
               try {
                 onMovieClick(featuredMovie);
               } catch (error) {

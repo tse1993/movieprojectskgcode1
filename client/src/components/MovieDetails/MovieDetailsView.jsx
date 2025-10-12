@@ -37,49 +37,43 @@ export default function MovieDetailsView({
 
   /** @param {string|number} movieId @param {number} rating */
   const handleRateMovie = (movieId, rating) => {
-    console.log('[MovieDetailsView] handleRateMovie called:', { movieId, rating, title: movie.title });
     try {
       onRateMovie(movieId, rating);
-      console.log('[MovieDetailsView] Movie rated successfully');
       toast.success(`Rated "${movie.title}" ${rating}/10 ⭐`);
     } catch (error) {
-      console.error('[MovieDetailsView] Failed to rate movie:', { movieId, rating, error });
+      console.error('[MovieDetailsView] Rate movie failed:', error);
       toast.error('Failed to rate movie');
       throw error;
     }
   };
 
   const handleToggleFavorite = () => {
-    console.log('[MovieDetailsView] handleToggleFavorite called:', { movieId: movie.id, title: movie.title, currentState: movie.isFavorite });
     try {
       const wasFavorite = movie.isFavorite !== undefined ? movie.isFavorite : isMovieFavorite(movie.id);
       onToggleFavorite(movie.id);
-      console.log('[MovieDetailsView] Favorite toggled successfully:', { wasFavorite, nowFavorite: !wasFavorite });
       if (wasFavorite) {
         toast.success(`Removed "${movie.title}" from favorites`);
       } else {
         toast.success(`Added "${movie.title}" to favorites ❤️`);
       }
     } catch (error) {
-      console.error('[MovieDetailsView] Failed to toggle favorite:', { movieId: movie.id, error });
+      console.error('[MovieDetailsView] Toggle favorite failed:', error);
       toast.error('Failed to update favorites');
       throw error;
     }
   };
 
   const handleToggleWatchlist = () => {
-    console.log('[MovieDetailsView] handleToggleWatchlist called:', { movieId: movie.id, title: movie.title, currentState: movie.isInWatchlist });
     try {
       const wasInWatchlist = movie.isInWatchlist !== undefined ? movie.isInWatchlist : (isMovieInWatchlist ? isMovieInWatchlist(movie.id) : false);
       onToggleWatchlist(movie.id);
-      console.log('[MovieDetailsView] Watchlist toggled successfully:', { wasInWatchlist, nowInWatchlist: !wasInWatchlist });
       if (wasInWatchlist) {
         toast.success(`Removed "${movie.title}" from watchlist`);
       } else {
         toast.success(`Added "${movie.title}" to watchlist 🕒`);
       }
     } catch (error) {
-      console.error('[MovieDetailsView] Failed to toggle watchlist:', { movieId: movie.id, error });
+      console.error('[MovieDetailsView] Toggle watchlist failed:', error);
       toast.error('Failed to update watchlist');
       throw error;
     }
@@ -217,16 +211,16 @@ export default function MovieDetailsView({
                 <h3 className="text-lg font-semibold mb-2">Cast & Crew</h3>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   {/* Display cast members */}
-                  {movie.cast && movie.cast.map((person) => (
-                    <div key={person.id}>
+                  {movie.cast && movie.cast.map((person, index) => (
+                    <div key={`cast-${person.id}-${index}`}>
                       <p className="font-medium">{person.name}</p>
                       <p className="text-muted-foreground">{person.character}</p>
                     </div>
                   ))}
 
                   {/* Display crew (director, producer) */}
-                  {movie.crew && movie.crew.map((person) => (
-                    <div key={person.id}>
+                  {movie.crew && movie.crew.map((person, index) => (
+                    <div key={`crew-${person.id}-${index}`}>
                       <p className="font-medium">{person.name}</p>
                       <p className="text-muted-foreground">{person.job}</p>
                     </div>

@@ -50,7 +50,6 @@ export default function Dashboard(props) {
   // Load movies from API on mount
   useEffect(() => {
     const loadMovies = async () => {
-      console.log('[Dashboard] loadMovies called - fetching popular, top-rated, and upcoming movies');
       try {
         setLoading(true);
         const [popular, topRated, upcoming] = await Promise.all([
@@ -59,12 +58,6 @@ export default function Dashboard(props) {
           api.getUpcomingMovies()
         ]);
 
-        console.log('[Dashboard] Movies loaded successfully:', {
-          popularCount: popular.results?.length,
-          topRatedCount: topRated.results?.length,
-          upcomingCount: upcoming.results?.length
-        });
-
         const popularResults = popular.results || [];
         setPopularMovies(popularResults);
         setTopRatedMovies(topRated.results || []);
@@ -72,24 +65,18 @@ export default function Dashboard(props) {
 
         // Fetch full details for featured movie (first popular movie) to get trailer
         if (popularResults.length > 0) {
-          console.log('[Dashboard] Fetching full details for featured movie:', popularResults[0].title);
           try {
             const featuredDetails = await api.getMovieDetails(popularResults[0].id);
-            console.log('[Dashboard] Featured movie details loaded:', {
-              title: featuredDetails.title,
-              hasTrailer: !!featuredDetails.trailerUrl
-            });
             setPopularMovies(prev => [featuredDetails, ...prev.slice(1)]);
           } catch (error) {
-            console.error('[Dashboard] Failed to load featured movie details:', error);
+            console.error('[Dashboard] Load featured movie failed:', error);
           }
         }
       } catch (error) {
-        console.error('[Dashboard] Failed to load movies:', error);
+        console.error('[Dashboard] Load movies failed:', error);
         throw error;
       } finally {
         setLoading(false);
-        console.log('[Dashboard] Loading complete');
       }
     };
 
@@ -100,13 +87,11 @@ export default function Dashboard(props) {
   useEffect(() => {
     const searchMoviesDebounced = async () => {
       if (searchQuery.trim()) {
-        console.log('[Dashboard] Searching movies with query:', searchQuery);
         try {
           const results = await api.searchMovies(searchQuery);
-          console.log('[Dashboard] Search results:', { count: results.results?.length, query: searchQuery });
           setSearchResults(results.results || []);
         } catch (error) {
-          console.error('[Dashboard] Search failed:', { query: searchQuery, error });
+          console.error('[Dashboard] Search failed:', error);
           setSearchResults([]);
           throw error;
         }
@@ -123,14 +108,12 @@ export default function Dashboard(props) {
   useEffect(() => {
     const loadGenreMovies = async () => {
       if (selectedGenre !== "All" && !searchQuery) {
-        console.log('[Dashboard] Loading movies for genre:', selectedGenre);
         try {
           setLoading(true);
           const results = await api.getMoviesByGenre(selectedGenre);
-          console.log('[Dashboard] Genre movies loaded:', { genre: selectedGenre, count: results.results?.length });
           setGenreMovies(results.results || []);
         } catch (error) {
-          console.error('[Dashboard] Failed to load genre movies:', { genre: selectedGenre, error });
+          console.error('[Dashboard] Load genre movies failed:', error);
           setGenreMovies([]);
           throw error;
         } finally {
@@ -149,8 +132,6 @@ export default function Dashboard(props) {
 
   /** @param {Movie} movie */
   const handleMovieClick = async (movie) => {
-    console.log('[Dashboard] handleMovieClick called:', { movieId: movie.id, title: movie.title });
-
     // Set basic movie data immediately so modal can render
     setSelectedMovie(movie);
     setIsDetailsOpen(true);
@@ -159,24 +140,14 @@ export default function Dashboard(props) {
 
     try {
       // Fetch full movie details and load comments in parallel
-      console.log('[Dashboard] Fetching full movie details and loading comments for:', movie.title);
       await Promise.all([
         api.getMovieDetails(movie.id).then(fullDetails => {
-          console.log('[Dashboard] Movie details loaded successfully:', {
-            title: fullDetails.title,
-            hasTrailer: !!fullDetails.trailerUrl,
-            hasBackdrop: !!fullDetails.backdropUrl
-          });
           setSelectedMovie(fullDetails);
         }),
         onLoadComments?.(movie.id)
       ]);
-
-      console.log('[Dashboard] Movie details and comments loaded');
     } catch (error) {
-      console.error('[Dashboard] Failed to load movie details:', { movieId: movie.id, title: movie.title, error });
-      // Keep using basic movie data (already set above)
-      console.log('[Dashboard] Using fallback basic movie data');
+      console.error('[Dashboard] Load movie details failed:', error);
     } finally {
       setIsLoadingDetails(false);
     }

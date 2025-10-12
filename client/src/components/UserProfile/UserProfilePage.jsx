@@ -6,12 +6,6 @@ import { api } from "../../services/api.js";
 
 /** @param {UserProfilePageProps} props */
 export default function UserProfilePage(props) {
-  console.log('[UserProfilePage] Component rendered with props:', {
-    userEmail: props.user?.email,
-    favoritesCount: props.favoriteMovies?.length,
-    ratingsCount: props.movieRatings?.length,
-    watchlistCount: props.watchlistMovies?.length
-  });
 
   const {
     user,
@@ -41,20 +35,20 @@ export default function UserProfilePage(props) {
   const [ratedViewMode, setRatedViewMode] = useState("grid");
   const [showRatedDeleteDialog, setShowRatedDeleteDialog] = useState(false);
 
+  const [showWatchlistDeleteDialog, setShowWatchlistDeleteDialog] = useState(false);
+
   // Favorites (already enriched from API - using transformed TMDB data)
   const favoriteMoviesList = favoriteMovies.map((favorite) => {
     try {
-      console.log('[UserProfilePage] Processing favorite:', { movieId: favorite.movieId, id: favorite.id, title: favorite.title, vote_average: favorite.vote_average });
-
       if (!favorite) {
-        console.error('[UserProfilePage] Favorite is null or undefined');
+        console.error('[UserProfilePage] Favorite is null');
         throw new Error('Favorite object is null or undefined');
       }
 
       // Use movieId (set by Root.jsx) or fallback to id from API
       const movieId = favorite.movieId || favorite.id;
       if (!movieId) {
-        console.error('[UserProfilePage] Favorite missing both movieId and id:', favorite);
+        console.error('[UserProfilePage] Favorite missing id:', favorite);
         throw new Error('Favorite missing id field');
       }
 
@@ -72,7 +66,7 @@ export default function UserProfilePage(props) {
         trailerUrl: favorite.trailerUrl, // Pass through trailer URL from API
       };
     } catch (error) {
-      console.error('[UserProfilePage] Error processing favorite:', { favorite, error: error.message, stack: error.stack });
+      console.error('[UserProfilePage] Error processing favorite:', error);
       throw error;
     }
   });
@@ -80,15 +74,13 @@ export default function UserProfilePage(props) {
   // Rated (already enriched from API - using transformed TMDB data)
   const ratedMovies = movieRatings.map((rating) => {
     try {
-      console.log('[UserProfilePage] Processing rating:', { tmdbId: rating.tmdbId, userRating: rating.rating, movieTitle: rating.movie?.title });
-
       if (!rating) {
-        console.error('[UserProfilePage] Rating is null or undefined');
+        console.error('[UserProfilePage] Rating is null');
         throw new Error('Rating object is null or undefined');
       }
 
       if (!rating.tmdbId && !rating.movie?.id) {
-        console.error('[UserProfilePage] Rating missing both tmdbId and movie.id:', rating);
+        console.error('[UserProfilePage] Rating missing id:', rating);
         throw new Error('Rating missing id fields');
       }
 
@@ -107,7 +99,7 @@ export default function UserProfilePage(props) {
         trailerUrl: rating.movie?.trailerUrl, // Pass through trailer URL
       };
     } catch (error) {
-      console.error('[UserProfilePage] Error processing rating:', { rating, error: error.message, stack: error.stack });
+      console.error('[UserProfilePage] Error processing rating:', error);
       throw error;
     }
   });
@@ -116,17 +108,15 @@ export default function UserProfilePage(props) {
   const watchlistMoviesWithDetails = watchlistMovies
     .map((item) => {
       try {
-        console.log('[UserProfilePage] Processing watchlist item:', { movieId: item.movieId, id: item.id, title: item.title, posterUrl: item.posterUrl, poster_path: item.poster_path });
-
         if (!item) {
-          console.error('[UserProfilePage] Watchlist item is null or undefined');
+          console.error('[UserProfilePage] Watchlist item is null');
           throw new Error('Watchlist item is null or undefined');
         }
 
         // Use movieId (set by Root.jsx) or fallback to id from API
         const movieId = item.movieId || item.id;
         if (!movieId) {
-          console.error('[UserProfilePage] Watchlist item missing both movieId and id:', item);
+          console.error('[UserProfilePage] Watchlist item missing id:', item);
           throw new Error('Watchlist item missing id field');
         }
 
@@ -142,7 +132,7 @@ export default function UserProfilePage(props) {
           trailerUrl: item.trailerUrl, // Pass through trailer URL
         };
       } catch (error) {
-        console.error('[UserProfilePage] Error processing watchlist item:', { item, error: error.message, stack: error.stack });
+        console.error('[UserProfilePage] Error processing watchlist item:', error);
         throw error;
       }
     })
@@ -152,17 +142,14 @@ export default function UserProfilePage(props) {
         const tb = b?.addedAt ? new Date(b.addedAt).getTime() : 0;
         return tb - ta;
       } catch (error) {
-        console.error('[UserProfilePage] Error sorting watchlist:', { error: error.message, a, b });
+        console.error('[UserProfilePage] Error sorting watchlist:', error);
         return 0;
       }
     });
 
   // Format member since date from user.createdAt
   const formatMemberSince = () => {
-    if (!user?.createdAt) {
-      console.warn('[UserProfilePage] User createdAt not available');
-      return 'Unknown';
-    }
+    if (!user?.createdAt) return 'Unknown';
 
     try {
       const date = new Date(user.createdAt);
@@ -172,7 +159,7 @@ export default function UserProfilePage(props) {
         day: "numeric"
       });
     } catch (error) {
-      console.error('[UserProfilePage] Error formatting member since date:', error);
+      console.error('[UserProfilePage] Error formatting date:', error);
       return 'Unknown';
     }
   };
@@ -200,12 +187,10 @@ export default function UserProfilePage(props) {
   };
 
   const handleClearAllFavorites = () => {
-    console.log('[UserProfilePage] handleClearAllFavorites called');
     onClearAllFavorites();
     setShowDeleteDialog(false);
   };
   const handleDeleteClick = () => {
-    console.log('[UserProfilePage] handleDeleteClick called');
     setShowDeleteDialog(true);
   };
 
@@ -222,18 +207,24 @@ export default function UserProfilePage(props) {
   };
 
   const handleClearAllRatings = () => {
-    console.log('[UserProfilePage] handleClearAllRatings called');
     onClearAllRatings();
     setShowRatedDeleteDialog(false);
   };
   const handleRatedDeleteClick = () => {
-    console.log('[UserProfilePage] handleRatedDeleteClick called');
     setShowRatedDeleteDialog(true);
   };
 
   const handleRemoveFromWatchlist = (movieId) => {
-    console.log('[UserProfilePage] handleRemoveFromWatchlist called:', { movieId });
     onRemoveFromWatchlist(movieId);
+  };
+
+  const handleClearAllWatchlist = () => {
+    onClearAllWatchlist();
+    setShowWatchlistDeleteDialog(false);
+  };
+
+  const handleWatchlistDeleteClick = () => {
+    setShowWatchlistDeleteDialog(true);
   };
 
   const allGenres = Array.from(
@@ -273,12 +264,10 @@ export default function UserProfilePage(props) {
   // Filter/sort rated
   let filteredRatedMovies = [];
   try {
-    console.log('[UserProfilePage] Filtering rated movies:', { filterRating, totalMovies: ratedMovies.length });
     filteredRatedMovies = [...ratedMovies];
 
     if (filterRating !== "all") {
       const minRating = parseInt(filterRating, 10);
-      console.log('[UserProfilePage] Applying rating filter:', { minRating, maxRating: minRating + 2 });
 
       if (isNaN(minRating)) {
         console.error('[UserProfilePage] Invalid filter rating:', filterRating);
@@ -286,12 +275,8 @@ export default function UserProfilePage(props) {
       }
 
       filteredRatedMovies = filteredRatedMovies.filter((m) => {
-        const matches = m.userRating >= minRating && m.userRating < minRating + 2;
-        console.log('[UserProfilePage] Rating filter check:', { title: m.title, userRating: m.userRating, minRating, matches });
-        return matches;
+        return m.userRating >= minRating && m.userRating < minRating + 2;
       });
-
-      console.log('[UserProfilePage] Filtered results count:', filteredRatedMovies.length);
     }
 
     filteredRatedMovies = [...filteredRatedMovies].sort((a, b) => {
@@ -321,7 +306,7 @@ export default function UserProfilePage(props) {
             return 0;
         }
       } catch (error) {
-        console.error('[UserProfilePage] Error sorting rated movies:', { a, b, sortBy: ratedSortBy, error });
+        console.error('[UserProfilePage] Error sorting rated movies:', error);
         return 0;
       }
     });
@@ -340,7 +325,6 @@ export default function UserProfilePage(props) {
   // Movie click handler - fetch full details and show modal
 
   const currentUserName = user?.name || user?.email?.split("@")[0] || "Anonymous";
-  console.log('[UserProfilePage] Current user name:', currentUserName);
 
   return (
     <>
@@ -380,7 +364,10 @@ export default function UserProfilePage(props) {
         // watchlist
         watchlistMoviesWithDetails={watchlistMoviesWithDetails}
         handleRemoveFromWatchlist={handleRemoveFromWatchlist}
-        onClearAllWatchlist={onClearAllWatchlist}
+        showWatchlistDeleteDialog={showWatchlistDeleteDialog}
+        setShowWatchlistDeleteDialog={setShowWatchlistDeleteDialog}
+        handleWatchlistDeleteClick={handleWatchlistDeleteClick}
+        handleClearAllWatchlist={handleClearAllWatchlist}
         // utils
         formatDate={formatDate}
         formatRuntime={formatRuntime}

@@ -13,13 +13,11 @@ export default function StarRatingPage({ movieId, initialRating = 0, onRate, cla
   }, [initialRating]);
 
   const handleStarClick = (rating) => {
-    console.log('[StarRatingPage] handleStarClick called:', { movieId, rating });
     try {
       setCurrentRating(rating);
       onRate(movieId, rating);
-      console.log('[StarRatingPage] Rating set successfully');
     } catch (error) {
-      console.error('[StarRatingPage] Failed to set rating:', { movieId, rating, error });
+      console.error('[StarRatingPage] Failed to set rating:', error);
       // Revert to previous rating on error
       setCurrentRating(initialRating);
       throw error;

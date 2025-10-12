@@ -18,15 +18,12 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const initAuth = async () => {
-      console.log('[AuthContext] initAuth called, token:', token ? 'exists' : 'null');
       if (token) {
         try {
-          console.log('[AuthContext] Calling api.getProfile()...');
           const data = await api.getProfile();
-          console.log('[AuthContext] Profile loaded:', data);
           setUser(data.user);
         } catch (error) {
-          console.error('[AuthContext] Failed to load user profile:', error);
+          console.error('[AuthContext] Failed to load profile:', error);
           logout();
         }
       }
@@ -37,49 +34,42 @@ export const AuthProvider = ({ children }) => {
   }, [token]);
 
   const login = async (email, password) => {
-    console.log('[AuthContext] login called:', { email });
     try {
       const data = await api.login(email, password);
-      console.log('[AuthContext] login successful, storing token and user:', { userId: data.user?._id, email: data.user?.email });
       localStorage.setItem('token', data.token);
       setToken(data.token);
       setUser(data.user);
       return data;
     } catch (error) {
-      console.error('[AuthContext] login failed:', error);
+      console.error('[AuthContext] Login failed:', error);
       throw error;
     }
   };
 
   const register = async (email, name, password) => {
-    console.log('[AuthContext] register called:', { email, name });
     try {
       const data = await api.register(email, name, password);
-      console.log('[AuthContext] register successful, storing token and user:', { userId: data.user?._id, email: data.user?.email });
       localStorage.setItem('token', data.token);
       setToken(data.token);
       setUser(data.user);
       return data;
     } catch (error) {
-      console.error('[AuthContext] register failed:', error);
+      console.error('[AuthContext] Register failed:', error);
       throw error;
     }
   };
 
   const logout = () => {
-    console.log('[AuthContext] logout called, clearing token and user');
     try {
       localStorage.removeItem('token');
       setToken(null);
       setUser(null);
-      console.log('[AuthContext] logout successful');
     } catch (error) {
-      console.error('[AuthContext] logout failed:', error);
+      console.error('[AuthContext] Logout failed:', error);
     }
   };
 
   const updateUser = (updatedUser) => {
-    console.log('[AuthContext] updateUser called:', { updatedUser });
     setUser(updatedUser);
   };
 

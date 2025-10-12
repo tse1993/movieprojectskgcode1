@@ -8,13 +8,7 @@ import { Badge } from "../../assets/ui/badge";
 /** @typedef {import("../../assets/types/pagesProps/FeedViewProps").FeedViewProps} FeedViewProps */
 
 /** @param {FeedViewProps} props */
-export default function FeedView({ user, onBack, activities, formatDate, onLoadMore, hasMore, loadingMore, onMovieClick }) {
-  console.log('[FeedView] Rendering with activities:', {
-    count: activities.length,
-    firstActivity: activities[0],
-    firstPoster: activities[0]?.moviePoster
-  });
-
+export default function FeedView({ user, onBack, activities, formatDate, onLoadMore, hasMore, loadingMore }) {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -52,10 +46,7 @@ export default function FeedView({ user, onBack, activities, formatDate, onLoadM
                 <div key={activity._id || index}>
                   <div className="flex space-x-4">
                     {/* Movie Poster */}
-                    <div
-                      className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={() => onMovieClick && onMovieClick(activity.tmdbId, activity.movieTitle)}
-                    >
+                    <div className="flex-shrink-0">
                       {activity.moviePoster ? (
                         <img
                           src={activity.moviePoster}
@@ -79,10 +70,7 @@ export default function FeedView({ user, onBack, activities, formatDate, onLoadM
                         </div>
                         <div className="flex items-center space-x-2">
                           <Film className="h-4 w-4 text-muted-foreground" />
-                          <h3
-                            className="font-semibold cursor-pointer hover:text-primary transition-colors"
-                            onClick={() => onMovieClick && onMovieClick(activity.tmdbId, activity.movieTitle)}
-                          >
+                          <h3 className="font-semibold">
                             {activity.movieTitle || 'Unknown Movie'}
                           </h3>
                           {activity.movieYear && (
