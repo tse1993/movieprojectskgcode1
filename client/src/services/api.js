@@ -376,5 +376,16 @@ export const api = {
       console.error('[API] Get feed failed:', error);
       throw error;
     }
+  },
+
+  // Public User Profile
+  getUserPublicProfile: async (userId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/${userId}/public-profile`);
+      return await handleResponse(response);
+    } catch (error) {
+      console.error('[API] Get user public profile failed:', error);
+      throw error;
+    }
   }
 };

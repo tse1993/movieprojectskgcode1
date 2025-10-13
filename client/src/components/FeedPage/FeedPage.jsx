@@ -20,70 +20,157 @@ export default function FeedPage(props) {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [newActivityCount, setNewActivityCount] = useState(0);
+
+  // User profile modal state
+  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [selectedUserProfile, setSelectedUserProfile] = useState(null);
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [isLoadingUserProfile, setIsLoadingUserProfile] = useState(false);
+
+  // Extract feed loading logic to reusable function
+  const loadFeedData = async () => {
+    try {
+      setLoading(true);
+      const data = await api.getFeed(1, 20);
+
+      // Get unique movie IDs to avoid duplicate API calls
+      const uniqueMovieIds = [...new Set(data.items.map(item => item.tmdbId))];
+
+      // Fetch movie details for unique movies only (in parallel)
+      const movieDetailsMap = {};
+      await Promise.all(
+        uniqueMovieIds.map(async (tmdbId) => {
+          try {
+            const movieDetails = await api.getMovieDetails(tmdbId);
+            movieDetailsMap[tmdbId] = {
+              title: movieDetails.title || 'Unknown Movie',
+              posterUrl: movieDetails.posterUrl || null,
+              releaseYear: movieDetails.releaseDate
+                ? new Date(movieDetails.releaseDate).getFullYear()
+                : null
+            };
+          } catch (error) {
+            console.error('[FeedPage] Load movie details failed:', error);
+            movieDetailsMap[tmdbId] = {
+              title: `Movie #${tmdbId}`,
+              posterUrl: null,
+              releaseYear: null
+            };
+          }
+        })
+      );
+
+      // Enrich feed items using the cached movie details
+      const enrichedActivities = data.items.map((item) => {
+        const movieData = movieDetailsMap[item.tmdbId] || {
+          title: 'Unknown Movie',
+          posterUrl: null,
+          releaseYear: null
+        };
+
+        return {
+          ...item,
+          movieTitle: movieData.title,
+          moviePoster: movieData.posterUrl,
+          movieYear: movieData.releaseYear
+        };
+      });
+
+      setActivities(enrichedActivities);
+
+      // Check if more pages exist
+      setHasMore(enrichedActivities.length === 20);
+      setCurrentPage(1);
+    } catch (error) {
+      console.error('[FeedPage] Load feed failed:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadFeed = async () => {
+    loadFeedData();
+
+    // Set up SSE connection for live updates
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const eventSource = new EventSource(`${API_BASE_URL}/feed?stream=true`);
+
+    eventSource.onopen = () => {
+      console.log('[FeedPage] SSE connection established');
+    };
+
+    eventSource.onmessage = async (event) => {
       try {
-        setLoading(true);
-        const data = await api.getFeed(1, 20);
+        const data = JSON.parse(event.data);
 
-        // Get unique movie IDs to avoid duplicate API calls
-        const uniqueMovieIds = [...new Set(data.items.map(item => item.tmdbId))];
+        if (data.type === 'connected') {
+          console.log('[FeedPage] SSE stream active');
+        } else if (data.type === 'update' && data.items && data.items.length > 0) {
+          console.log('[FeedPage] New activity detected:', data.count, 'items');
 
-        // Fetch movie details for unique movies only (in parallel)
-        const movieDetailsMap = {};
-        await Promise.all(
-          uniqueMovieIds.map(async (tmdbId) => {
-            try {
-              const movieDetails = await api.getMovieDetails(tmdbId);
-              movieDetailsMap[tmdbId] = {
-                title: movieDetails.title || 'Unknown Movie',
-                posterUrl: movieDetails.posterUrl || null,
-                releaseYear: movieDetails.releaseDate
-                  ? new Date(movieDetails.releaseDate).getFullYear()
-                  : null
-              };
-            } catch (error) {
-              console.error('[FeedPage] Load movie details failed:', error);
-              movieDetailsMap[tmdbId] = {
-                title: `Movie #${tmdbId}`,
-                posterUrl: null,
-                releaseYear: null
-              };
-            }
-          })
-        );
+          // Fetch movie details for new comments
+          const uniqueMovieIds = [...new Set(data.items.map(item => item.tmdbId))];
+          const movieDetailsMap = {};
 
-        // Enrich feed items using the cached movie details
-        const enrichedActivities = data.items.map((item) => {
-          const movieData = movieDetailsMap[item.tmdbId] || {
-            title: 'Unknown Movie',
-            posterUrl: null,
-            releaseYear: null
-          };
+          await Promise.all(
+            uniqueMovieIds.map(async (tmdbId) => {
+              try {
+                const movieDetails = await api.getMovieDetails(tmdbId);
+                movieDetailsMap[tmdbId] = {
+                  title: movieDetails.title || 'Unknown Movie',
+                  posterUrl: movieDetails.posterUrl || null,
+                  releaseYear: movieDetails.releaseDate
+                    ? new Date(movieDetails.releaseDate).getFullYear()
+                    : null
+                };
+              } catch (error) {
+                console.error('[FeedPage] Load movie details failed:', error);
+                movieDetailsMap[tmdbId] = {
+                  title: `Movie #${tmdbId}`,
+                  posterUrl: null,
+                  releaseYear: null
+                };
+              }
+            })
+          );
 
-          return {
-            ...item,
-            movieTitle: movieData.title,
-            moviePoster: movieData.posterUrl,
-            movieYear: movieData.releaseYear
-          };
-        });
+          // Enrich new activities
+          const enrichedNewActivities = data.items.map((item) => {
+            const movieData = movieDetailsMap[item.tmdbId] || {
+              title: 'Unknown Movie',
+              posterUrl: null,
+              releaseYear: null
+            };
 
-        setActivities(enrichedActivities);
+            return {
+              ...item,
+              movieTitle: movieData.title,
+              moviePoster: movieData.posterUrl,
+              movieYear: movieData.releaseYear
+            };
+          });
 
-        // Check if more pages exist
-        setHasMore(enrichedActivities.length === 20);
-        setCurrentPage(1);
+          // Add to top of activities list
+          setActivities(prev => [...enrichedNewActivities, ...prev]);
+          setNewActivityCount(prev => prev + data.count);
+        }
       } catch (error) {
-        console.error('[FeedPage] Load feed failed:', error);
-        throw error;
-      } finally {
-        setLoading(false);
+        console.error('[FeedPage] SSE message parse error:', error);
       }
     };
 
-    loadFeed();
+    eventSource.onerror = (error) => {
+      console.error('[FeedPage] SSE connection error:', error);
+      eventSource.close();
+    };
+
+    // Cleanup on unmount
+    return () => {
+      console.log('[FeedPage] Closing SSE connection');
+      eventSource.close();
+    };
   }, []);
 
   const handleLoadMore = async () => {
@@ -151,6 +238,11 @@ export default function FeedPage(props) {
     }
   };
 
+  const handleRefresh = async () => {
+    await loadFeedData();
+    setNewActivityCount(0); // Clear new activity indicator
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return 'Unknown date';
     try {
@@ -164,6 +256,32 @@ export default function FeedPage(props) {
       console.error('[FeedPage] Date formatting error:', error);
       return 'Invalid date';
     }
+  };
+
+  // Handle user profile click
+  const handleUserClick = async (userId) => {
+    if (!userId) return;
+
+    setSelectedUserId(userId);
+    setIsUserModalOpen(true);
+    setIsLoadingUserProfile(true);
+    setSelectedUserProfile(null);
+
+    try {
+      const profile = await api.getUserPublicProfile(userId);
+      setSelectedUserProfile(profile);
+    } catch (error) {
+      console.error('[FeedPage] Load user profile failed:', error);
+    } finally {
+      setIsLoadingUserProfile(false);
+    }
+  };
+
+  const handleCloseUserModal = () => {
+    setIsUserModalOpen(false);
+    setSelectedUserId(null);
+    setSelectedUserProfile(null);
+    setIsLoadingUserProfile(false);
   };
 
   if (loading) {
@@ -186,6 +304,14 @@ export default function FeedPage(props) {
       onLoadMore={handleLoadMore}
       hasMore={hasMore}
       loadingMore={loadingMore}
+      onRefresh={handleRefresh}
+      loading={loading}
+      newActivityCount={newActivityCount}
+      onUserClick={handleUserClick}
+      selectedUserProfile={selectedUserProfile}
+      isUserModalOpen={isUserModalOpen}
+      isLoadingUserProfile={isLoadingUserProfile}
+      onCloseUserModal={handleCloseUserModal}
     />
   );
 }

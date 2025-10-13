@@ -1,14 +1,31 @@
-import { ArrowLeft, MessageCircle, Star, Calendar, Film } from "lucide-react";
+import { ArrowLeft, MessageCircle, Star, Calendar, Film, RefreshCw } from "lucide-react";
 import { Button } from "../../assets/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../assets/ui/card";
 import { Separator } from "../../assets/ui/separator";
 import { Badge } from "../../assets/ui/badge";
+import UserProfileModal from "../UserProfileModal/UserProfileModal.jsx";
 
 /** @typedef {import("../../assets/types/feed/comment").Comment} Comment */
 /** @typedef {import("../../assets/types/pagesProps/FeedViewProps").FeedViewProps} FeedViewProps */
 
 /** @param {FeedViewProps} props */
-export default function FeedView({ user, onBack, activities, formatDate, onLoadMore, hasMore, loadingMore }) {
+export default function FeedView({
+  user,
+  onBack,
+  activities,
+  formatDate,
+  onLoadMore,
+  hasMore,
+  loadingMore,
+  onRefresh,
+  loading,
+  newActivityCount,
+  onUserClick,
+  selectedUserProfile,
+  isUserModalOpen,
+  isLoadingUserProfile,
+  onCloseUserModal
+}) {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -39,7 +56,26 @@ export default function FeedView({ user, onBack, activities, formatDate, onLoadM
           {/* Feed List */}
           <Card>
             <CardHeader>
-              <CardTitle>Review Activity</CardTitle>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <CardTitle>Review Activity</CardTitle>
+                  {newActivityCount > 0 && (
+                    <Badge variant="default" className="animate-pulse">
+                      {newActivityCount} new
+                    </Badge>
+                  )}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onRefresh}
+                  disabled={loading}
+                  className="gap-2"
+                >
+                  <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">
               {activities.map((activity, index) => (
@@ -65,7 +101,12 @@ export default function FeedView({ user, onBack, activities, formatDate, onLoadM
                       {/* User & Movie Info */}
                       <div className="space-y-1">
                         <div className="flex items-center space-x-2">
-                          <span className="font-medium text-sm">{activity.userName || 'Anonymous'}</span>
+                          <span
+                            className="font-medium text-sm cursor-pointer hover:underline hover:text-primary"
+                            onClick={() => onUserClick(activity.userId)}
+                          >
+                            {activity.userName || 'Anonymous'}
+                          </span>
                           <span className="text-muted-foreground text-sm">commented on</span>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -140,6 +181,14 @@ export default function FeedView({ user, onBack, activities, formatDate, onLoadM
           )}
         </div>
       </div>
+
+      {/* User Profile Modal */}
+      <UserProfileModal
+        profile={selectedUserProfile}
+        isOpen={isUserModalOpen}
+        isLoading={isLoadingUserProfile}
+        onClose={onCloseUserModal}
+      />
     </div>
   );
 }

@@ -164,10 +164,69 @@ class SocialController {
   }
 
   /**
-   * Get activity feed (recent comments across all movies)
-   * GET /api/feed?page=1&limit=10
+   * Get activity feed with SSE support
+   * GET /api/feed?page=1&limit=10 (normal request)
+   * GET /api/feed?stream=true (SSE stream)
    */
   async getFeed(req, res) {
+    // Check if client wants SSE stream
+    if (req.query.stream === 'true') {
+      // Set up SSE headers
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+
+      // Send initial connection message
+      res.write(`data: ${JSON.stringify({ type: 'connected', message: 'Feed stream active' })}\n\n`);
+
+      const db = getDB();
+      let lastCheckTime = new Date();
+
+      // Function to check for new comments
+      const checkForUpdates = async () => {
+        try {
+          // Find comments created after last check
+          const newComments = await db.collection('comments')
+            .find({ createdAt: { $gt: lastCheckTime } })
+            .sort({ createdAt: -1 })
+            .toArray();
+
+          if (newComments.length > 0) {
+            // Send new comments to client
+            res.write(`data: ${JSON.stringify({
+              type: 'update',
+              items: newComments,
+              count: newComments.length
+            })}\n\n`);
+
+            // Update last check time
+            lastCheckTime = newComments[0].createdAt;
+          }
+        } catch (error) {
+          console.error('SSE check error:', error);
+        }
+      };
+
+      // Check for updates every 5 seconds
+      const intervalId = setInterval(checkForUpdates, 5000);
+
+      // Send heartbeat every 30 seconds
+      const heartbeatId = setInterval(() => {
+        res.write(`:heartbeat\n\n`);
+      }, 30000);
+
+      // Clean up on disconnect
+      req.on('close', () => {
+        clearInterval(intervalId);
+        clearInterval(heartbeatId);
+        console.log('SSE client disconnected');
+      });
+
+      return;
+    }
+
+    // Normal REST endpoint (pagination)
     try {
       const db = getDB();
       const { page = 1, limit = 10 } = req.query;

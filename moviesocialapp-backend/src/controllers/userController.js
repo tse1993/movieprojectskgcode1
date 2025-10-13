@@ -426,6 +426,160 @@ class UserController {
       });
     }
   }
+
+  /**
+   * Get public profile for any user (for viewing other users' profiles)
+   * GET /api/users/:userId/public-profile
+   */
+  async getPublicProfile(req, res) {
+    try {
+      const { userId } = req.params;
+      const db = getDB();
+
+      // Validate userId format
+      if (!ObjectId.isValid(userId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
+
+      // Find user by ID
+      const user = await db.collection('users').findOne(
+        { _id: new ObjectId(userId) },
+        { projection: { password: 0, email: 0 } } // Exclude sensitive data
+      );
+
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Calculate statistics
+      const stats = {
+        ratingsCount: user.ratings.length,
+        averageRating: user.ratings.length > 0
+          ? Math.round((user.ratings.reduce((sum, r) => sum + r.rating, 0) / user.ratings.length) * 10) / 10
+          : 0,
+        favoritesCount: user.favorites.length,
+        watchlistCount: user.watchlist.length
+      };
+
+      // Get recent ratings (last 5, sorted by date)
+      const recentRatings = user.ratings
+        .sort((a, b) => new Date(b.ratedAt) - new Date(a.ratedAt))
+        .slice(0, 5);
+
+      // Fetch movie details for recent ratings
+      const recentActivity = await Promise.all(
+        recentRatings.map(async (rating) => {
+          try {
+            const movie = await tmdbApi.getMovieDetails(rating.tmdbId);
+            return {
+              type: 'rating',
+              movie: {
+                id: movie.id,
+                title: movie.title,
+                posterUrl: movie.posterUrl
+              },
+              rating: rating.rating,
+              date: rating.ratedAt
+            };
+          } catch (error) {
+            console.error(`Error fetching movie ${rating.tmdbId}:`, error);
+            return null;
+          }
+        })
+      );
+
+      // Get recent comments from the user
+      const recentComments = await db.collection('comments')
+        .find({ userId: new ObjectId(userId) })
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .toArray();
+
+      // Fetch movie details for recent comments
+      const commentsActivity = await Promise.all(
+        recentComments.map(async (comment) => {
+          try {
+            const movie = await tmdbApi.getMovieDetails(comment.tmdbId);
+            return {
+              type: 'comment',
+              movie: {
+                id: movie.id,
+                title: movie.title,
+                posterUrl: movie.posterUrl
+              },
+              content: comment.content,
+              date: comment.createdAt
+            };
+          } catch (error) {
+            console.error(`Error fetching movie ${comment.tmdbId}:`, error);
+            return null;
+          }
+        })
+      );
+
+      // Combine and sort all activity by date
+      const allActivity = [...recentActivity, ...commentsActivity]
+        .filter(item => item !== null)
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .slice(0, 10);
+
+      // Get favorite movies (top 6 for display)
+      const topFavorites = user.favorites.slice(0, 6);
+      const favoriteMovies = await Promise.all(
+        topFavorites.map(async (tmdbId) => {
+          try {
+            const movie = await tmdbApi.getMovieDetails(tmdbId);
+            return {
+              id: movie.id,
+              title: movie.title,
+              posterUrl: movie.posterUrl,
+              rating: movie.rating
+            };
+          } catch (error) {
+            console.error(`Error fetching movie ${tmdbId}:`, error);
+            return null;
+          }
+        })
+      );
+
+      // Get watchlist movies (top 6 for display)
+      const topWatchlist = user.watchlist.slice(0, 6);
+      const watchlistMovies = await Promise.all(
+        topWatchlist.map(async (tmdbId) => {
+          try {
+            const movie = await tmdbApi.getMovieDetails(tmdbId);
+            return {
+              id: movie.id,
+              title: movie.title,
+              posterUrl: movie.posterUrl,
+              rating: movie.rating
+            };
+          } catch (error) {
+            console.error(`Error fetching movie ${tmdbId}:`, error);
+            return null;
+          }
+        })
+      );
+
+      // Build response
+      const publicProfile = {
+        user: {
+          id: user._id,
+          name: user.name,
+          createdAt: user.createdAt
+        },
+        statistics: stats,
+        recentActivity: allActivity,
+        favorites: favoriteMovies.filter(movie => movie !== null),
+        watchlist: watchlistMovies.filter(movie => movie !== null)
+      };
+
+      res.json(publicProfile);
+    } catch (error) {
+      console.error('Get public profile error:', error);
+      res.status(500).json({ message: 'Error fetching public profile' });
+    }
+  }
 }
 
 module.exports = new UserController();

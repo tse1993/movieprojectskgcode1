@@ -61,4 +61,8 @@ router.delete('/comments/:id', authenticateToken, socialController.deleteComment
 // Get activity feed (public)
 router.get('/feed', socialController.getFeed);
 
+// PUBLIC USER ROUTES
+// Get public profile for any user (for viewing other users' profiles)
+router.get('/users/:userId/public-profile', userController.getPublicProfile);
+
 module.exports = router;
