@@ -7,7 +7,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../assets/ui/tabs";
 
 /** @typedef {import("../../assets/types/pagesProps/loginViewProps").LoginViewProps} LoginViewProps */
 
-/** @param {LoginViewProps} props */
+/** @param {LoginViewProps & {
+ *  error: string,
+ *  isLoading: boolean,
+ *  forgotPasswordMessage: string,
+ *  onForgotPassword: () => void,
+ *  onClearForgotMessage: () => void
+ * }} props */
 export default function LoginView({
   showPassword,
   onToggleShowPassword,
@@ -20,6 +26,10 @@ export default function LoginView({
   features,
   error,
   isLoading,
+  // NEW forgot password props
+  forgotPasswordMessage,
+  onForgotPassword,
+  onClearForgotMessage,
 }) {
   const iconMap = { Film, Star, Users, Bookmark };
 
@@ -111,9 +121,10 @@ export default function LoginView({
                         type="email"
                         placeholder="Enter your email"
                         value={loginForm.email}
-                        onChange={(e) =>
-                          setLoginForm((prev) => ({ ...prev, email: e.target.value }))
-                        }
+                        onChange={(e) => {
+                          setLoginForm((prev) => ({ ...prev, email: e.target.value }));
+                          onClearForgotMessage && onClearForgotMessage();
+                        }}
                         required
                         disabled={isLoading}
                       />
@@ -152,10 +163,28 @@ export default function LoginView({
                       {isLoading ? "Signing In..." : "Sign In"}
                     </Button>
                   </form>
+
                   <div className="text-center">
-                    <Button variant="link" size="sm">
+                    <Button
+                      variant="link"
+                      size="sm"
+                      type="button"
+                      onClick={onForgotPassword}
+                      disabled={isLoading}
+                    >
                       Forgot your password?
                     </Button>
+                    {forgotPasswordMessage && (
+                      <p
+                        className={`text-sm mt-2 ${
+                          forgotPasswordMessage.includes("sent")
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }`}
+                      >
+                        {forgotPasswordMessage}
+                      </p>
+                    )}
                   </div>
                 </TabsContent>
 

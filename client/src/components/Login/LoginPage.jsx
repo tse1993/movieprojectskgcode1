@@ -1,5 +1,4 @@
 import { useState } from "react";
-
 import LoginView from "./LoginView.jsx";
 import { useAuth } from "../../contexts/AuthContext.jsx";
 
@@ -19,6 +18,9 @@ export default function LoginPage({ onLogin }) {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // NEW: Forgot password UI message
+  const [forgotPasswordMessage, setForgotPasswordMessage] = useState("");
+
   const handleToggleShowPassword = () => setShowPassword((v) => !v);
 
   const handleLogin = async (e) => {
@@ -30,8 +32,8 @@ export default function LoginPage({ onLogin }) {
       const data = await login(loginForm.email, loginForm.password);
       if (onLogin) onLogin(data.user);
     } catch (err) {
-      console.error('[LoginPage] Login failed:', err);
-      setError(err.message || "Login failed. Please check your credentials.");
+      console.error("[LoginPage] Login failed:", err);
+      setError(err?.message || "Login failed. Please check your credentials.");
     } finally {
       setIsLoading(false);
     }
@@ -54,15 +56,38 @@ export default function LoginPage({ onLogin }) {
     setIsLoading(true);
 
     try {
-      const data = await register(registerForm.email, registerForm.name, registerForm.password);
+      const data = await register(
+        registerForm.email,
+        registerForm.name,
+        registerForm.password
+      );
       if (onLogin) onLogin(data.user);
     } catch (err) {
-      console.error('[LoginPage] Register failed:', err);
-      setError(err.message || "Registration failed. Please try again.");
+      console.error("[LoginPage] Register failed:", err);
+      setError(err?.message || "Registration failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
+
+  // NEW: Forgot password logic (frontend-only validation for now)
+  const handleForgotPassword = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!loginForm.email.trim() || !emailRegex.test(loginForm.email)) {
+      setForgotPasswordMessage(
+        "Email field is empty or doesn't exist on the database"
+      );
+      return;
+    }
+
+    // TODO: Replace with real API call (e.g., auth.forgotPassword(loginForm.email))
+    setForgotPasswordMessage(
+      "A temporary password has been sent to your email account"
+    );
+  };
+
+  const clearForgotMessage = () => setForgotPasswordMessage("");
 
   const features = [
     {
@@ -101,6 +126,10 @@ export default function LoginPage({ onLogin }) {
       onLogin={onLogin}
       error={error}
       isLoading={isLoading}
+      // NEW forgot password props
+      forgotPasswordMessage={forgotPasswordMessage}
+      onForgotPassword={handleForgotPassword}
+      onClearForgotMessage={clearForgotMessage}
     />
   );
 }
