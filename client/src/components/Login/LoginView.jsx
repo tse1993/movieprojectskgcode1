@@ -90,7 +90,7 @@ export default function LoginView({
         <div className="w-full max-w-md mx-auto">
           <Card className="shadow-xl">
             <CardHeader className="text-center">
-              <CardTitle>Welcome to MovieDB</CardTitle>
+              <CardTitle>Welcome to MoviePulse</CardTitle>
               <CardDescription>
                 Sign in to your account or create a new one to get started
               </CardDescription>
