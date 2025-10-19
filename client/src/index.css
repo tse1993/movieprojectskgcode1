@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Edu+NSW+ACT+Cursive:wght@400..700&display=swap');
 @import "tailwindcss";
 
 /* 1) Χαρτογράφηση CSS variables -> Tailwind tokens */
@@ -174,4 +175,8 @@ html { font-size: var(--font-size); }
 /* Container */
 @media (min-width: 96rem) {
   .container { max-width: 98%; }
+}
+
+@theme{
+  --font-cursive: "Edu NSW ACT Cursive", cursive;
 }
