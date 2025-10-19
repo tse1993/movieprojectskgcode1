@@ -33,8 +33,8 @@ export default function HeaderView({
           onClick={onNavigateToMain}
           className="mr-6 flex items-center space-x-2 hover:opacity-80 transition-opacity cursor-pointer"
         >
-          <div className="h-8 w-8 rounded bg-primary"></div>
-          <span className="hidden font-bold sm:inline-block">MovieDB</span>
+          <img src="Logo/skg_logo.png"/>
+          <span className="hidden font-medium sm:inline-block font-cursive">MoviePulse</span>
         </button>
 
         <nav className="flex items-center space-x-6 text-sm font-medium">

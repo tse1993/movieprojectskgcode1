@@ -40,14 +40,10 @@ export default function LoginView({
         <div className="space-y-8 text-center lg:text-left">
           <div className="space-y-4">
             <div className="flex items-center justify-center lg:justify-start space-x-3">
-              <div className="h-12 w-12 rounded-lg bg-primary flex items-center justify-center">
-                <Film className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <h1 className="text-3xl font-bold">MovieDB</h1>
+              <img src="Logo/skg_logo4.png" alt=""/>
             </div>
-            <h2 className="text-4xl lg:text-5xl font-bold leading-tight">
-              Your Ultimate
-              <span className="block text-primary">Movie Experience</span>
+            <h2 className="text-4xl lg:text-5xl font-medium leading-tight font-cursive" >
+              Feel the pulse of movie!
             </h2>
             <p className="text-xl text-muted-foreground max-w-lg">
               Discover your next favorite film with curated movie recommendations, personalized watchlists, and detailed reviews.
