@@ -1,7 +1,10 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const { getDB } = require('../config/db');
 const { ObjectId } = require('mongodb');
+const { sendTemporaryPasswordEmail } = require('../utils/emailService'); // Updated import
+
 
 class AuthController {
   async register(req, res) {
@@ -107,6 +110,66 @@ class AuthController {
       });
     } catch (error) {
       console.error('Login error:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  }
+
+  // 🆕 NEW: Send temporary password to email
+  async forgotPassword(req, res) {
+    try {
+      console.log('🔵 Forgot password endpoint hit');
+      const { email } = req.body;
+
+      // 📝 Validate input
+      if (!email) {
+        return res.status(400).json({ 
+          message: "Email field is empty or doesn't exist on the database" 
+        });
+      }
+
+      const db = getDB();
+
+      // 🔍 Find user
+      console.log('🔍 Looking for user with email:', email);
+      const user = await db.collection('users').findOne({ email });
+      
+      if (!user) {
+        console.log('❌ User not found');
+        return res.status(400).json({ 
+          message: "Email field is empty or doesn't exist on the database" 
+        });
+      }
+
+      // 🎲 Generate temporary password (8 characters, easy to type)
+      console.log('🎲 Generating temporary password...');
+      const tempPassword = crypto.randomBytes(4).toString('hex'); // 8 char hex
+      
+      // 🔐 Hash temporary password
+      console.log('🔐 Hashing temporary password...');
+      const hashedTempPassword = await bcrypt.hash(tempPassword, 10);
+
+      // 💾 Update user's password
+      console.log('💾 Updating user password...');
+      await db.collection('users').updateOne(
+        { _id: user._id },
+        {
+          $set: {
+            password: hashedTempPassword,
+            passwordChangedAt: new Date()
+          }
+        }
+      );
+
+      // 📧 Send email with temporary password
+      console.log('📧 Sending temporary password email...');
+      await sendTemporaryPasswordEmail(user.email, tempPassword);
+
+      console.log('✅ Temporary password sent');
+      res.json({ 
+        message: 'A temporary password has been sent to your email account' 
+      });
+    } catch (error) {
+      console.error('Forgot password error:', error);
       res.status(500).json({ message: 'Server error' });
     }
   }

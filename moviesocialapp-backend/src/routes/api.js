@@ -7,12 +7,14 @@ const movieController = require('../controllers/movieController');
 const socialController = require('../controllers/socialController');
 const userController = require('../controllers/userController');
 
+
 // Middleware
 const { authenticateToken, optionalAuth } = require('../middleware/auth');
 
 // AUTHENTICATION ROUTES
 router.post('/auth/register', authController.register);
 router.post('/auth/login', authController.login);
+router.post('/auth/forgot-password', authController.forgotPassword); 
 
 // MOVIE ROUTES (PUBLIC)
 router.get('/movies/search', movieController.searchMovies);

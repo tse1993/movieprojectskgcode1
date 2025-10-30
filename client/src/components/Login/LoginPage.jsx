@@ -70,21 +70,46 @@ export default function LoginPage({ onLogin }) {
     }
   };
 
-  // NEW: Forgot password logic (frontend-only validation for now)
-  const handleForgotPassword = () => {
+  // UPDATED: Real API call for forgot password
+  const handleForgotPassword = async () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!loginForm.email.trim() || !emailRegex.test(loginForm.email)) {
       setForgotPasswordMessage(
-        "Email field is empty or doesn't exist on the database"
+        "Please enter a valid email address"
       );
       return;
     }
 
-    // TODO: Replace with real API call (e.g., auth.forgotPassword(loginForm.email))
-    setForgotPasswordMessage(
-      "A temporary password has been sent to your email account"
-    );
+    setIsLoading(true);
+    setForgotPasswordMessage("");
+
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      
+      const response = await fetch(`${API_URL}/auth/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: loginForm.email }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message);
+      }
+
+      setForgotPasswordMessage(data.message);
+    } catch (err) {
+      console.error("[LoginPage] Forgot password failed:", err);
+      setForgotPasswordMessage(
+        err?.message || "Failed to send reset email. Please try again."
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const clearForgotMessage = () => setForgotPasswordMessage("");
@@ -126,7 +151,6 @@ export default function LoginPage({ onLogin }) {
       onLogin={onLogin}
       error={error}
       isLoading={isLoading}
-      // NEW forgot password props
       forgotPasswordMessage={forgotPasswordMessage}
       onForgotPassword={handleForgotPassword}
       onClearForgotMessage={clearForgotMessage}
