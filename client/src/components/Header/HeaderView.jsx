@@ -9,7 +9,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../../assets/ui/dropdown-menu";
-import logo from "../../Logo/skg_logo.png";
 
 /** @typedef {import("../../assets/types/pagesProps/HeaderProps").HeaderProps} HeaderProps */
 
@@ -34,7 +33,7 @@ export default function HeaderView({
           onClick={onNavigateToMain}
           className="mr-6 flex items-center space-x-2 hover:opacity-80 transition-opacity cursor-pointer"
         >
-          <img src={logo} alt="MoviePulse Logo" />
+          <img src="/Logo/skg_logo.png" alt="MoviePulse Logo" />
           <span className="hidden font-medium sm:inline-block font-cursive">MoviePulse</span>
         </button>
 

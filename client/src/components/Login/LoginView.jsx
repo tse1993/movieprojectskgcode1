@@ -4,7 +4,6 @@ import { Button } from "../../assets/ui/button";
 import { Input } from "../../assets/ui/input";
 import { Label } from "../../assets/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../assets/ui/tabs";
-import logo from "../../Logo/skg_logo4.png";
 
 /** @typedef {import("../../assets/types/pagesProps/loginViewProps").LoginViewProps} LoginViewProps */
 
@@ -41,7 +40,7 @@ export default function LoginView({
         <div className="space-y-8 text-center lg:text-left">
           <div className="space-y-4">
             <div className="flex items-center justify-center lg:justify-start space-x-3">
-              <img src={logo} alt="MoviePulse Logo" />
+              <img src="/Logo/skg_logo4.png" alt="MoviePulse Logo" />
             </div>
             <h2 className="text-4xl lg:text-5xl font-medium leading-tight font-cursive" >
               Feel the pulse of movie!
