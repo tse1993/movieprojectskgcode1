@@ -8,7 +8,7 @@ const errorHandler = require('./src/middleware/errorHandler');
 
 const app = express();
 
-// CORS Middleware (port 3000)
+// CORS Middleware - Updated with Vercel URL
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps, Postman, or same-origin)
@@ -19,12 +19,18 @@ app.use(cors({
       return callback(null, true);
     }
     
-    // Allow configured frontend URL
+    // Allow Vercel frontend URL
+    if (origin === 'https://movieprojectskgcode11.vercel.app') {
+      return callback(null, true);
+    }
+    
+    // Allow configured frontend URL from environment variable
     if (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL) {
       return callback(null, true);
     }
     
-    callback(null, true); // Allow all in development
+    // Reject other origins in production
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -32,6 +38,7 @@ app.use(cors({
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
   maxAge: 86400 // 24 hours
 }));
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
