@@ -8,7 +8,7 @@ const errorHandler = require('./src/middleware/errorHandler');
 
 const app = express();
 
-// CORS Middleware - Updated with Vercel URL
+// CORS Middleware - Updated with NEW Vercel URL
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps, Postman, or same-origin)
@@ -19,8 +19,8 @@ app.use(cors({
       return callback(null, true);
     }
     
-    // Allow Vercel frontend URL
-    if (origin === 'https://movieprojectskgcode11.vercel.app') {
+    // Allow NEW Vercel frontend URL - UPDATE THIS WITH YOUR ACTUAL VERCEL URL
+    if (origin === 'https://movieprojectskgcode-front.vercel.app') {
       return callback(null, true);
     }
     
